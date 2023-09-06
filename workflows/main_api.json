@@ -1,0 +1,418 @@
+{
+  "checkpoint_loader": {
+    "inputs": {
+      "ckpt_name": "v1-5-pruned-emaonly.safetensors"
+    },
+    "class_type": "CheckpointLoaderSimple"
+  },
+  "vae_loader": {
+    "inputs": {
+      "vae_name": "vae-ft-mse-840000-ema-pruned.ckpt"
+    },
+    "class_type": "VAELoader"
+  },
+  "main_sampler": {
+    "inputs": {
+      "seed": 0,
+      "steps": 20,
+      "cfg": 8,
+      "sampler_name": "euler",
+      "scheduler": "normal",
+      "denoise": 1,
+      "model": [
+        "checkpoint_loader",
+        0
+      ],
+      "positive": [
+        "main_prompt_positive",
+        0
+      ],
+      "negative": [
+        "main_prompt_negative",
+        0
+      ]
+    },
+    "class_type": "KSampler"
+  },
+  "main_prompt_positive": {
+    "inputs": {
+      "text": "",
+      "clip": [
+        "checkpoint_loader",
+        1
+      ]
+    },
+    "class_type": "CLIPTextEncode"
+  },
+  "main_prompt_negative": {
+    "inputs": {
+      "text": "",
+      "clip": [
+        "checkpoint_loader",
+        1
+      ]
+    },
+    "class_type": "CLIPTextEncode"
+  },
+  "main_vae_decode": {
+    "inputs": {
+      "samples": [
+        "main_sampler",
+        0
+      ],
+      "vae": [
+        "checkpoint_loader",
+        2
+      ]
+    },
+    "class_type": "VAEDecode"
+  },
+  "save_image": {
+    "inputs": {
+      "filename_prefix": "ComfyUI"
+    },
+    "class_type": "SaveImage"
+  },
+  "empty_latent": {
+    "inputs": {
+      "width": 512,
+      "height": 512,
+      "batch_size": 1
+    },
+    "class_type": "EmptyLatentImage"
+  },
+  "source_image_loader": {
+    "inputs": {
+      "image": "example.png",
+      "choose file to upload": "image"
+    },
+    "class_type": "LoadImage"
+  },
+  "source_vae_encode": {
+    "inputs": {
+      "pixels": [
+        "source_image_loader",
+        0
+      ],
+      "vae": [
+        "checkpoint_loader",
+        2
+      ]
+    },
+    "class_type": "VAEEncode"
+  },
+  "mask_image_loader": {
+    "inputs": {
+      "image": "example.png",
+      "choose file to upload": "image"
+    },
+    "class_type": "LoadImage"
+  },
+  "inpaint_simple": {
+    "inputs": {
+      "samples": [
+        "source_vae_encode",
+        0
+      ],
+      "mask": [
+        "mask_feather",
+        0
+      ]
+    },
+    "class_type": "SetLatentNoiseMask"
+  },
+  "inpaint_specific": {
+    "inputs": {
+      "grow_mask_by": 0,
+      "pixels": [
+        "source_image_loader",
+        0
+      ],
+      "vae": [
+        "checkpoint_loader",
+        2
+      ],
+      "mask": [
+        "mask_feather",
+        0
+      ]
+    },
+    "class_type": "VAEEncodeForInpaint"
+  },
+  "mask_grow": {
+    "inputs": {
+      "expand": 0,
+      "tapered_corners": true,
+      "mask": [
+        "mask_from_image",
+        0
+      ]
+    },
+    "class_type": "GrowMask"
+  },
+  "mask_feather": {
+    "inputs": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0,
+      "mask": [
+        "mask_grow",
+        0
+      ]
+    },
+    "class_type": "FeatherMask"
+  },
+  "upscale_model_loader": {
+    "inputs": {
+      "model_name": "4x-UltraSharp.pth"
+    },
+    "class_type": "UpscaleModelLoader"
+  },
+  "upscale_resize": {
+    "inputs": {
+      "upscale_method": "nearest-exact",
+      "scale_by": 1
+    },
+    "class_type": "ImageScaleBy"
+  },
+  "upscale_with_model": {
+    "inputs": {
+      "upscale_model": [
+        "upscale_model_loader",
+        0
+      ]
+    },
+    "class_type": "ImageUpscaleWithModel"
+  },
+  "upscale_vae_encode": {
+    "inputs": {
+      "pixels": [
+        "upscale_resize",
+        0
+      ],
+      "vae": [
+        "checkpoint_loader",
+        2
+      ]
+    },
+    "class_type": "VAEEncode"
+  },
+  "upscale_sampler": {
+    "inputs": {
+      "seed": 0,
+      "steps": 20,
+      "cfg": 8,
+      "sampler_name": "euler",
+      "scheduler": "normal",
+      "denoise": 1,
+      "model": [
+        "checkpoint_loader",
+        0
+      ],
+      "positive": [
+        "main_prompt_positive",
+        0
+      ],
+      "negative": [
+        "main_prompt_negative",
+        0
+      ]
+    },
+    "class_type": "KSampler"
+  },
+  "upscale_vae_decode": {
+    "inputs": {
+      "samples": [
+        "upscale_sampler",
+        0
+      ],
+      "vae": [
+        "checkpoint_loader",
+        2
+      ]
+    },
+    "class_type": "VAEDecode"
+  },
+  "refiner_model_loader": {
+    "inputs": {
+      "ckpt_name": "xl\\sd_xl_refiner_1.0.safetensors"
+    },
+    "class_type": "CheckpointLoaderSimple"
+  },
+  "refiner_sampler": {
+    "inputs": {
+      "add_noise": "disable",
+      "noise_seed": 0,
+      "steps": 20,
+      "cfg": 8,
+      "sampler_name": "euler",
+      "scheduler": "normal",
+      "start_at_step": 0,
+      "end_at_step": 10000,
+      "return_with_leftover_noise": "disable",
+      "model": [
+        "refiner_model_loader",
+        0
+      ],
+      "positive": [
+        "refiner_prompt_positive",
+        0
+      ],
+      "negative": [
+        "refiner_prompt_negative",
+        0
+      ]
+    },
+    "class_type": "KSamplerAdvanced"
+  },
+  "refiner_prompt_positive": {
+    "inputs": {
+      "text": "",
+      "clip": [
+        "refiner_model_loader",
+        1
+      ]
+    },
+    "class_type": "CLIPTextEncode"
+  },
+  "refiner_prompt_negative": {
+    "inputs": {
+      "text": "",
+      "clip": [
+        "refiner_model_loader",
+        1
+      ]
+    },
+    "class_type": "CLIPTextEncode"
+  },
+  "upscale_inpaint_simple": {
+    "inputs": {
+      "samples": [
+        "upscale_vae_encode",
+        0
+      ],
+      "mask": [
+        "mask_feather",
+        0
+      ]
+    },
+    "class_type": "SetLatentNoiseMask"
+  },
+  "upscale_inpaint_specific": {
+    "inputs": {
+      "grow_mask_by": 0,
+      "pixels": [
+        "upscale_resize",
+        0
+      ],
+      "vae": [
+        "checkpoint_loader",
+        2
+      ],
+      "mask": [
+        "mask_feather",
+        0
+      ]
+    },
+    "class_type": "VAEEncodeForInpaint"
+  },
+  "lora_1": {
+    "inputs": {
+      "lora_name": "adjustment\\LowRA.safetensors",
+      "strength_model": 1,
+      "strength_clip": 1,
+      "model": [
+        "checkpoint_loader",
+        0
+      ],
+      "clip": [
+        "checkpoint_loader",
+        1
+      ]
+    },
+    "class_type": "LoraLoader"
+  },
+  "controlnet_model_loader_1": {
+    "inputs": {
+      "control_net_name": "control_v11e_sd15_ip2p.pth",
+      "model": [
+        "checkpoint_loader",
+        0
+      ]
+    },
+    "class_type": "DiffControlNetLoader"
+  },
+  "controlnet_apply_1": {
+    "inputs": {
+      "strength": 1,
+      "start_percent": 0,
+      "end_percent": 1,
+      "positive": [
+        "main_prompt_positive",
+        0
+      ],
+      "negative": [
+        "main_prompt_negative",
+        0
+      ],
+      "control_net": [
+        "controlnet_model_loader_1",
+        0
+      ],
+      "image": [
+        "controlnet_preprocessor_1",
+        0
+      ]
+    },
+    "class_type": "ControlNetApplyAdvanced"
+  },
+  "controlnet_preprocessor_1": {
+    "inputs": {
+      "low_threshold": 0.4,
+      "high_threshold": 0.8,
+      "image": [
+        "controlnet_image_loader_1",
+        0
+      ]
+    },
+    "class_type": "Canny"
+  },
+  "controlnet_image_loader_1": {
+    "inputs": {
+      "image": "20230712185019-3212364575-a8073040-breakdomain_M2150_0805b136eb.png",
+      "choose file to upload": "image"
+    },
+    "class_type": "LoadImage"
+  },
+  "controlnet_upscale_with_model_1": {
+    "inputs": {
+      "upscale_model": [
+        "upscale_model_loader",
+        0
+      ]
+    },
+    "class_type": "ImageUpscaleWithModel"
+  },
+  "controlnet_upscale_resize_1": {
+    "inputs": {
+      "upscale_method": "nearest-exact",
+      "scale_by": 1,
+      "image": [
+        "controlnet_upscale_with_model_1",
+        0
+      ]
+    },
+    "class_type": "ImageScaleBy"
+  },
+  "mask_from_image": {
+    "inputs": {
+      "color": 0,
+      "image": [
+        "mask_image_loader",
+        0
+      ]
+    },
+    "class_type": "ImageColorToMask"
+  }
+}
