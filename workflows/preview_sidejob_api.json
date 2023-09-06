@@ -1,0 +1,76 @@
+{
+  "mask_grow": {
+    "inputs": {
+      "expand": 0,
+      "tapered_corners": true,
+      "mask": [
+        "mask_from_image",
+        0
+      ]
+    },
+    "class_type": "GrowMask"
+  },
+  "mask_feather": {
+    "inputs": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0,
+      "mask": [
+        "mask_grow",
+        0
+      ]
+    },
+    "class_type": "FeatherMask"
+  },
+  "controlnet_image_loader": {
+    "inputs": {
+      "image": "example.png",
+      "choose file to upload": "image"
+    },
+    "class_type": "LoadImage"
+  },
+  "mask_to_image": {
+    "inputs": {
+      "mask": [
+        "mask_feather",
+        0
+      ]
+    },
+    "class_type": "MaskToImage"
+  },
+  "save_image": {
+    "inputs": {
+      "filename_prefix": "ComfyUI"
+    },
+    "class_type": "SaveImage"
+  },
+  "controlnet_preprocessor": {
+    "inputs": {
+      "low_threshold": 0.4,
+      "high_threshold": 0.8,
+      "image": [
+        "controlnet_image_loader",
+        0
+      ]
+    },
+    "class_type": "Canny"
+  },
+  "mask_from_image": {
+    "inputs": {
+      "color": 1,
+      "image": [
+        "mask_image_loader",
+        0
+      ]
+    },
+    "class_type": "ImageColorToMask"
+  },
+  "mask_image_loader": {
+    "inputs": {
+      "image": "example.png",
+      "choose file to upload": "image"
+    },
+    "class_type": "LoadImage"
+  }
+}
