@@ -273,7 +273,7 @@ lora_available_combobox.GetPos(&stored_gui_x, &stored_gui_y, &stored_gui_w, &sto
 lora_active_listview := lora_selection.Add("ListView", "x" stored_gui_x " y" stored_gui_y + stored_gui_h + 1 " w" A_ScreenWidth / 25 * 6 " r5 Background" control_colour " -Multi", ["LORA", "Strength"])
 
 Loop 6 {
-  lora_active_listview.Add(,"dummy item")
+  lora_active_listview.Add(,"")
 }
 lora_active_listview.ModifyCol(1, A_ScreenWidth / 5)
 lora_active_listview.ModifyCol(2, "AutoHdr Float")
@@ -415,7 +415,7 @@ controlnet_picture.GetPos(&stored_gui_x, &stored_gui_y, &stored_gui_w, &stored_g
 controlnet_active_listview := mask_and_controlnet.Add("ListView", "x" stored_gui_x " y" stored_gui_y + stored_gui_h + 1 " w" A_ScreenWidth / 3 " r5 Background" control_colour " -Multi", ["Image", "Checkpoint", "Strength", "Start", "End", "Preprocessor"])
 
 Loop 6 {
-  controlnet_active_listview.Add(,,"dummy item")
+  controlnet_active_listview.Add(,"")
 }
 controlnet_active_listview.GetPos(&stored_gui_x, &stored_gui_y, &stored_gui_w, &stored_gui_h)
 controlnet_active_listview.ModifyCol(1, "100")
@@ -458,7 +458,7 @@ output_listview := output_viewer.Add("ListView", "x" stored_gui_x " y" stored_gu
 
 output_listview.Opt("-Redraw")
 Loop 50 {
-  output_listview.Add(,,"dummy item")
+  output_listview.Add(,"")
 }
 output_listview.ModifyCol(1, 0)
 output_listview.ModifyCol(2, "Integer Left AutoHdr")
