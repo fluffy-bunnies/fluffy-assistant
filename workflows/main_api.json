@@ -335,7 +335,7 @@
   },
   "controlnet_model_loader_1": {
     "inputs": {
-      "control_net_name": "control_v11e_sd15_ip2p.pth",
+      "control_net_name": "control_v11p_sd15_canny.pth",
       "model": [
         "checkpoint_loader",
         0
@@ -380,7 +380,7 @@
   },
   "controlnet_image_loader_1": {
     "inputs": {
-      "image": "20230712185019-3212364575-a8073040-breakdomain_M2150_0805b136eb.png",
+      "image": "example.png",
       "choose file to upload": "image"
     },
     "class_type": "LoadImage"
@@ -414,5 +414,18 @@
       ]
     },
     "class_type": "ImageColorToMask"
+  },
+  "source_image_batcher_1": {
+    "inputs": {
+      "image1": [
+        "source_image_loader",
+        0
+      ],
+      "image2": [
+        "source_image_loader",
+        0
+      ]
+    },
+    "class_type": "ImageBatch"
   }
 }
