@@ -454,13 +454,14 @@ output_viewer.SetFont("s" text_size " c" text_colour " q0", text_font)
 output_picture := output_viewer.Add("Picture", "x0 y0 w240 h240", "stuff\placeholder_pixel.bmp")
 
 output_picture.GetPos(&stored_gui_x, &stored_gui_y, &stored_gui_w, &stored_gui_h)
-output_listview := output_viewer.Add("ListView", "x" stored_gui_x " y" stored_gui_y + stored_gui_h + 1 " w" stored_gui_w " h" A_ScreenHeight / 3 " Background" control_colour " -Multi SortDesc Count50", ["Output Images"])
+output_listview := output_viewer.Add("ListView", "x" stored_gui_x " y" stored_gui_y + stored_gui_h + 1 " w" stored_gui_w " h" A_ScreenHeight / 3 " Background" control_colour " -Multi SortDesc Count50", ["File Name", "Output Images"])
 
 output_listview.Opt("-Redraw")
 Loop 50 {
-  output_listview.Add(,"dummy item")
+  output_listview.Add(,,"dummy item")
 }
-output_listview.ModifyCol(1, "Integer Center AutoHdr")
+output_listview.ModifyCol(1, 0)
+output_listview.ModifyCol(2, "Integer Left AutoHdr")
 output_listview.Delete()
 output_listview.Opt("+Redraw")
 
@@ -1489,7 +1490,7 @@ controlnet_remove_button_click(GuiCtrlObj, Info) {
 output_listview.OnEvent("ItemSelect", output_listview_itemselect)
 output_listview_itemselect(GuiCtrlObj, Item, Selected) {
   if (output_listview.GetNext()) {
-    global last_selected_output_image := output_folder output_listview.GetText(output_listview.GetNext(), 1) ".png"
+    global last_selected_output_image := output_folder output_listview.GetText(output_listview.GetNext(), 1)
     image_load_and_fit_wthout_change(last_selected_output_image, output_picture_frame)
   }
 }
@@ -1497,7 +1498,6 @@ output_listview_itemselect(GuiCtrlObj, Item, Selected) {
 clear_outputs_list_button.OnEvent("Click", clear_outputs_list_button_click)
 clear_outputs_list_button_click(GuiCtrlObj, Info) {
   output_listview.Delete()
-  ;output_listview_itemselect(output_listview, "", "")
   global last_selected_output_image := ""
   image_load_and_fit_wthout_change("stuff\placeholder_pixel.bmp", output_picture_frame)
 }
@@ -1521,7 +1521,7 @@ main_preview_picture_contextmenu(GuiCtrlObj, Item, IsRightClick, X, Y) {
   for (existing_image in inputs) {
     inputs_existing_images_menu.Add(existing_image, main_preview_picture_menu_file)
   }
-
+  outputs_existing_images_menu.Delete()
   while (A_Index <= output_listview.GetCount()) {
     outputs_existing_images_menu.Add(output_listview.GetText(A_Index), main_preview_picture_menu_output_file)
   }
@@ -1541,7 +1541,7 @@ main_preview_picture_menu_file(ItemName, ItemPos, MyMenu) {
 ;main preview - output file
 ;--------------------------------------------------
 main_preview_picture_menu_output_file(ItemName, ItemPos, MyMenu) {
-  if (valid_file := image_load_and_fit(output_folder ItemName ".png", main_preview_picture_frame)) {
+  if (valid_file := image_load_and_fit(output_folder ItemName, main_preview_picture_frame)) {
     inputs[main_preview_picture_frame["name"]] := valid_file
     main_preview_picture_update(0)
   }
@@ -1607,12 +1607,15 @@ main_preview_picture_update(on_off) {
 mask_picture.OnEvent("ContextMenu", mask_picture_contextmenu)
 mask_picture_contextmenu(GuiCtrlObj, Item, IsRightClick, X, Y) {
   inputs_existing_images_menu.Delete()
+
   for (existing_image in inputs) {
     inputs_existing_images_menu.Add(existing_image, mask_picture_menu_file)
   }
+  outputs_existing_images_menu.Delete()
   while (A_Index <= output_listview.GetCount()) {
     outputs_existing_images_menu.Add(output_listview.GetText(A_Index), mask_picture_menu_output_file)
   }
+
   mask_picture_menu.Show()
 }
 
@@ -1632,7 +1635,7 @@ mask_picture_menu_file(ItemName, ItemPos, MyMenu) {
 ;mask output file
 ;--------------------------------------------------
 mask_picture_menu_output_file(ItemName, ItemPos, MyMenu) {
-  if (valid_file := image_load_and_fit(output_folder ItemName ".png", mask_picture_frame)) {
+  if (valid_file := image_load_and_fit(output_folder ItemName, mask_picture_frame)) {
 	inputs[mask_picture_frame["name"]] := valid_file
     if (preview_images.Has("mask")) {
       preview_images.Delete("mask")
@@ -1685,12 +1688,15 @@ mask_picture_menu_remove(ItemName, ItemPos, MyMenu) {
 controlnet_picture.OnEvent("ContextMenu", controlnet_picture_contextmenu)
 controlnet_picture_contextmenu(GuiCtrlObj, Item, IsRightClick, X, Y) {
   inputs_existing_images_menu.Delete()
+
   for (existing_images in inputs) {
     inputs_existing_images_menu.Add(existing_images, controlnet_picture_menu_file)
   }
+  outputs_existing_images_menu.Delete()
   while (A_Index <= output_listview.GetCount()) {
     outputs_existing_images_menu.Add(output_listview.GetText(A_Index), controlnet_picture_menu_output_file)
   }
+
   controlnet_picture_menu.Show()
 }
 
@@ -1724,7 +1730,7 @@ controlnet_picture_menu_output_file(ItemName, ItemPos, MyMenu) {
   if (controlnet_picture_frame["name"] = "") {
     controlnet_picture_frame["name"] := controlnet_check_for_free_index()
   }
-  if (valid_file := image_load_and_fit(output_folder ItemName ".png", controlnet_picture_frame)) {
+  if (valid_file := image_load_and_fit(output_folder ItemName, controlnet_picture_frame)) {
 	inputs[controlnet_picture_frame["name"]] := valid_file
 
     if (preview_images.Has(controlnet_picture_frame["name"])) {
@@ -1955,6 +1961,9 @@ open_settings_file_button.OnEvent("Click", open_settings_file_button_click)
 open_settings_file_button_click(GuiCtrlObj, Info) {
   overlay_hide()
   try {
+    if (!FileExist("fluffy-settings.ini")) {
+      FileCopy("fluffy-settings.ini.example", "fluffy-settings.ini")
+    }
     Run "Notepad fluffy-settings.ini"
   }
   catch Error as what_went_wrong {
@@ -2548,9 +2557,6 @@ diffusion_time() {
   thought["mask_from_image"]["class_type"] := "ImageToMask"
   thought["mask_from_image"]["inputs"].Delete("color")
 
-  ;image count - batch size only works without image source
-  thought["empty_latent"]["inputs"]["batch_size"] := batch_size_edit.Value
-
   ;checkpoint
   thought["checkpoint_loader"]["inputs"]["ckpt_name"] := checkpoint_combobox.Text
 
@@ -2595,8 +2601,28 @@ diffusion_time() {
   ;source image
   if (inputs.Has("source")) {
     thought["source_image_loader"]["inputs"]["image"] := server_image_files["source"]
-    thought["main_sampler"]["inputs"]["latent_image"] := ["source_vae_encode", 0]
-    ;change node for KSampler's "latent_image" again if there's a mask
+    ;image count
+    if (batch_size_edit.Value > 1) {
+      image_batcher_node_count := 1
+      thought["source_image_batcher_1"]["inputs"]["image1"] := ["source_image_loader", 0]
+      thought["source_image_batcher_1"]["inputs"]["image2"] := ["source_image_loader", 0]
+      while (image_batcher_node_count + 1 < batch_size_edit.Value) {
+        image_batcher_node_count += 1
+        thought["source_image_batcher_" image_batcher_node_count] := Map(
+          "inputs", Map(
+            "image1", ["source_image_batcher_" image_batcher_node_count - 1, 0]
+            ,"image2", ["source_image_loader", 0]
+          ),
+          "class_type", "ImageBatch"
+        )
+      }
+      thought["source_vae_encode"]["inputs"]["pixels"] := ["source_image_batcher_" image_batcher_node_count, 0]
+      thought["inpaint_specific"]["inputs"]["pixels"] := ["source_image_batcher_" image_batcher_node_count, 0]
+    }
+    else {
+      thought["source_vae_encode"]["inputs"]["pixels"] := ["source_image_loader", 0]
+      thought["inpaint_specific"]["inputs"]["pixels"] := ["source_image_loader", 0]
+    }
     if (inputs.Has("mask")) {
       thought["mask_image_loader"]["inputs"]["image"] := server_image_files["mask"]
       ;this is broken
@@ -2611,12 +2637,17 @@ diffusion_time() {
         thought["main_sampler"]["inputs"]["latent_image"] := ["inpaint_simple", 0]
       }
     }
+    else {
+      thought["main_sampler"]["inputs"]["latent_image"] := ["source_vae_encode", 0]
+    }
   }
   else {
     thought["main_sampler"]["inputs"]["latent_image"] := ["empty_latent", 0]
     ;dimensions
     thought["empty_latent"]["inputs"]["width"] := image_width_edit.Value
     thought["empty_latent"]["inputs"]["height"] := image_height_edit.Value
+    ;image count
+    thought["empty_latent"]["inputs"]["batch_size"] := batch_size_edit.Value
     if (inputs.Has("mask")) {
       ;this should usually be pointless but the user should be allowed to
       ;inpaint a blank source image if they want to
@@ -2946,6 +2977,9 @@ diffusion_time() {
     }
   }
 
+  ;saving
+  generation_time := thought["save_image"]["inputs"]["filename_prefix"] := A_Now
+
   prayer := Jxon_dump(Map("prompt", thought, "client_id", client_id))
 
   try {
@@ -2955,7 +2989,7 @@ diffusion_time() {
     status_text.Text := FormatTime() "`n" server_address "`n" altar.Status ": " altar.StatusText "`n" altar.ResponseText
     if (altar.Status = 200) {
       vision := Jxon_load(&response)
-      images_to_download[A_Now] := vision["prompt_id"]
+      images_to_download[generation_time] := vision["prompt_id"]
       Run assistant_script " " A_ScriptName " " server_address " " client_id " normal_job " vision["prompt_id"]
     }
     else {
@@ -3109,11 +3143,14 @@ preview_sidejob(picture_frame) {
     }
   }
 
-  if (server_image_files.Has("controlnet_preview")) {
-    thought["controlnet_image_loader"]["inputs"]["image"] := server_image_files["controlnet_preview"]
-  }
+
   if (server_image_files.Has("mask_preview")) {
     thought["mask_image_loader"]["inputs"]["image"] := server_image_files["mask_preview"]
+    thought["save_image"]["inputs"]["filename_prefix"] := "mask_preview"
+  }
+  if (server_image_files.Has("controlnet_preview")) {
+    thought["controlnet_image_loader"]["inputs"]["image"] := server_image_files["controlnet_preview"]
+    thought["save_image"]["inputs"]["filename_prefix"] := "controlnet_preview"
   }
 
   prayer := Jxon_dump(Map("prompt", thought, "client_id", client_id))
@@ -3155,9 +3192,8 @@ download_images() {
         output_listview.Opt("-Redraw")
         for (output_image in history[prompt_id]["outputs"]["save_image"]["images"]) {
           url_values := "filename=" LC_UriEncode(output_image["filename"]) "&subfolder=" LC_UriEncode(output_image["subfolder"]) "&type=" LC_UriEncode(output_image["type"])
-          Download "http://" server_address "/view?" url_values, output_folder time "_" Format("{:05u}", A_Index - 1) ".png"
-          output_listview.Add(, time "_" Format("{:05u}", A_Index - 1))
-
+          Download "http://" server_address "/view?" url_values, output_folder output_image["filename"]
+          output_listview.Add(,output_image["filename"], FormatTime(time, "[HH:mm:ss]") " " Format("{:05u}", A_Index))
         }
         output_listview.Opt("+Redraw")
         if (output_listview.GetCount()) {
@@ -3172,7 +3208,6 @@ download_images() {
       if (images_to_download.Has(time)) {
         images_to_download.Delete(time)
       }
-      return
     }
   }
 }
@@ -3208,7 +3243,6 @@ download_preview_images() {
       if (preview_image_to_download.Has(name)) {
         preview_image_to_download.Delete(name)
       }
-      return
     }
   }
 }
