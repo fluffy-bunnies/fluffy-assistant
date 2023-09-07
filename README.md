@@ -4,7 +4,7 @@ fluffy-assistant is an interface for ComfyUI created to assist with rapid, repea
 </p>
 
 <p>
-Because it is an AutoHotkey script, it will only work on Windows.
+Because it is an AutoHotkey script, it will only work on Windows. It also requires an instance of ComfyUI to connect to. A display resolution of at least 1920*1080 (100% DPI scaling) is recommended.
 </p>
 
 <p>
