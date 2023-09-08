@@ -1341,8 +1341,13 @@ controlnet_preprocessor_reset_values() {
   for (node in preprocessor_controls) {
     for (opt in preprocessor_controls[node]) {
       for (optionality in scripture[node]["input"]) {
-        if scripture[node]["input"][optionality].Has(opt) {
-          preprocessor_controls[node][opt][1].Text := scripture[node]["input"][optionality][opt][2]["default"]
+        if (scripture[node]["input"][optionality].Has(opt)) {
+          if (scripture[node]["input"][optionality][opt].Has(2) and (scripture[node]["input"][optionality][opt][2].Has("default"))) {
+            preprocessor_controls[node][opt][1].Text := scripture[node]["input"][optionality][opt][2]["default"]
+          }
+          else if (Type(scripture[node]["input"][optionality][opt][1]) = "Array") {
+            preprocessor_controls[node][opt][1].Text := scripture[node]["input"][optionality][opt][1][1]
+          }
         }
       }
     }
@@ -2344,8 +2349,7 @@ connect_to_server(*) {
 
   remake_controlnet_preprocessor_gui()
   for (node in scripture) {
-    ;find every node which has the string "preprocessor" in category name
-    ;if InStr(scripture[node]["category"], "preprocessor") {
+    ;find every node which has the string given as preprocessor_category_name in category name
     if (InStr(scripture[node]["category"], "image/preprocessors") = 1 or InStr(scripture[node]["category"], preprocessor_category_name) = 1) {
       controlnet_preprocessor_dropdownlist.Add([scripture[node]["display_name"]])
       ;this mapping makes some things slightly easier
@@ -2362,16 +2366,31 @@ connect_to_server(*) {
         for (opt, value_properties in scripture[node]["input"][optionality]) {
           controlnet_preprocessor_option_next_y := gap_y + (edit_default_h + gap_y) * Mod(preprocessor_controls_created, 3)
           controlnet_preprocessor_option_next_x := (preprocessor_controls_created // 3) * (100 + gap_x)
-          switch {
-            ;this should be an array with "enable" and "disable" but should hopefully be fine with other values too
-            case Type(value_properties[1]) = "Array":
-              preprocessor_controls[node][opt] := create_a_choice(controlnet_preprocessor_option_next_x, controlnet_preprocessor_option_next_y, node, opt, value_properties[1], value_properties[2]["default"])
-              preprocessor_controls_created += 1
-            ;number to be represented using an edit and updown
-            case value_properties[1] = "INT" or value_properties[1] = "FLOAT":
-              preprocessor_controls[node][opt] := create_a_number_box(controlnet_preprocessor_option_next_x, controlnet_preprocessor_option_next_y, node, opt, value_properties[2]["default"], value_properties[2]["min"], value_properties[2]["max"], value_properties[2]["step"])
-              preprocessor_controls_created += 1
-            ;default:
+          if (Type(value_properties) = "Array") {
+            switch {
+              ;this should be an array with "enable" and "disable" but should hopefully be fine with other values too
+              case Type(value_properties[1]) = "Array":
+                if (value_properties[1].Length) {
+                  if (value_properties.Has(2) and value_properties[2].Has("default")) {
+                    preprocessor_controls[node][opt] := create_a_choice(controlnet_preprocessor_option_next_x, controlnet_preprocessor_option_next_y, node, opt, value_properties[1], value_properties[2]["default"])
+                  }
+                  else {
+                    preprocessor_controls[node][opt] := create_a_choice(controlnet_preprocessor_option_next_x, controlnet_preprocessor_option_next_y, node, opt, value_properties[1], value_properties[1][1])
+                  }
+                  preprocessor_controls_created += 1
+                }
+              ;number to be represented using an edit and updown
+              case value_properties[1] = "INT" or value_properties[1] = "FLOAT":
+                if (value_properties[2].Has("step")) {
+                  step_value_to_use := value_properties[2]["step"]
+                }
+                else {
+                  step_value_to_use := value_properties[1] = "FLOAT" ? 0.1 : 1
+                }
+                preprocessor_controls[node][opt] := create_a_number_box(controlnet_preprocessor_option_next_x, controlnet_preprocessor_option_next_y, node, opt, value_properties[2]["default"], value_properties[2]["min"], value_properties[2]["max"], step_value_to_use)
+                preprocessor_controls_created += 1
+              ;default:
+            }
           }
         }
       }
@@ -2825,6 +2844,7 @@ diffusion_time() {
   }
   if (actual_lora_count) {
     thought["main_prompt_positive"]["inputs"]["clip"] := ["lora_" actual_lora_count, 1]
+    thought["main_prompt_negative"]["inputs"]["clip"] := ["lora_" actual_lora_count, 1]
     thought["main_sampler"]["inputs"]["model"] := ["lora_" actual_lora_count, 0]
     if (upscale_combobox.Text and upscale_combobox.Text != "None") {
       thought["upscale_sampler"]["inputs"]["model"] := ["lora_" actual_lora_count, 0]
