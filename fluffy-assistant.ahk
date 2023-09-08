@@ -1341,16 +1341,12 @@ controlnet_preprocessor_reset_values() {
   for (node in preprocessor_controls) {
     for (opt in preprocessor_controls[node]) {
       for (optionality in scripture[node]["input"]) {
-        if scripture[node]["input"][optionality].Has(opt) {
-          if (scripture[node]["input"][optionality][opt].Has(2)) {
-            if (scripture[node]["input"][optionality][opt][2].Has("default")) {
-              preprocessor_controls[node][opt][1].Text := scripture[node]["input"][optionality][opt][2]["default"]
-            }
-            else {
-              if (Type(scripture[node]["input"][optionality][opt][1]) = "Array") {
-                preprocessor_controls[node][opt][1].Text := scripture[node]["input"][optionality][opt][1][1]
-              }
-            }
+        if (scripture[node]["input"][optionality].Has(opt)) {
+          if (scripture[node]["input"][optionality][opt].Has(2) and (scripture[node]["input"][optionality][opt][2].Has("default"))) {
+            preprocessor_controls[node][opt][1].Text := scripture[node]["input"][optionality][opt][2]["default"]
+          }
+          else if (Type(scripture[node]["input"][optionality][opt][1]) = "Array") {
+            preprocessor_controls[node][opt][1].Text := scripture[node]["input"][optionality][opt][1][1]
           }
         }
       }
