@@ -31,46 +31,61 @@ transparent_bg_colour := "0xAAAAAA"
 assistant_script := A_IsCompiled ? "assistant-assistant.exe" : "assistant-assistant.ahk"
 
 ;--------------------------------------------------
-;read settings from fluffy-settings.ini
+;read settings from settings.ini
 ;and decide what to do with them
 ;--------------------------------------------------
-background_colour := IniRead("fluffy-settings.ini", "settings", "background_colour", "0x000000")
+background_colour := IniRead("settings.ini", "settings", "background_colour", "0x000000")
 background_colour := background_colour = "" ? "0x000000" : background_colour
-background_opacity := IniRead("fluffy-settings.ini", "settings", "background_opacity", 128)
+background_opacity := IniRead("settings.ini", "settings", "background_opacity", 128)
 background_opacity := background_opacity = "" ? 128 : background_opacity
-control_colour := IniRead("fluffy-settings.ini", "settings", "control_colour", "0x101010")
+control_colour := IniRead("settings.ini", "settings", "control_colour", "0x101010")
 control_colour := control_colour = "" ? "0x101010" : control_colour
-text_font := IniRead("fluffy-settings.ini", "settings", "text_font", "Arial")
+text_font := IniRead("settings.ini", "settings", "text_font", "Arial")
 text_font := text_font = "" ? "Arial" : text_font
-text_size := IniRead("fluffy-settings.ini", "settings", "text_size", 12)
+text_size := IniRead("settings.ini", "settings", "text_size", 12)
 text_size := text_size = "" ? 12 : text_size
-text_colour := IniRead("fluffy-settings.ini", "settings", "text_colour", "0xB0B0B0")
+text_colour := IniRead("settings.ini", "settings", "text_colour", "0xB0B0B0")
 text_colour := text_colour = "" ? "0xB0B0B0" : text_colour
-show_labels := IniRead("fluffy-settings.ini", "settings", "show_labels", 1)
+show_labels := IniRead("settings.ini", "settings", "show_labels", 1)
 ;blank means no
-label_font := IniRead("fluffy-settings.ini", "settings", "label_font", "Arial")
+label_font := IniRead("settings.ini", "settings", "label_font", "Arial")
 label_font := label_font = "" ? "Arial" : label_font
-label_size := IniRead("fluffy-settings.ini", "settings", "label_size", 12)
+label_size := IniRead("settings.ini", "settings", "label_size", 12)
 label_size := label_size = "" ? 12 : label_size
-label_colour := IniRead("fluffy-settings.ini", "settings", "label_colour", "0xE0E0E0")
+label_colour := IniRead("settings.ini", "settings", "label_colour", "0xE0E0E0")
 label_colour := label_colour = "" ? "0xE0E0E0" : label_colour
-gap_x := IniRead("fluffy-settings.ini", "settings", "gap_x", 25)
+gap_x := IniRead("settings.ini", "settings", "gap_x", 25)
 gap_x := gap_x = "" ? 25 : gap_x
-gap_y := IniRead("fluffy-settings.ini", "settings", "gap_y", 25)
+gap_y := IniRead("settings.ini", "settings", "gap_y", 25)
 gap_y := gap_y = "" ? 25 : gap_y
-screen_border_x := IniRead("fluffy-settings.ini", "settings", "screen_border_x", 10)
+screen_border_x := IniRead("settings.ini", "settings", "screen_border_x", 10)
 screen_border_x := screen_border_x = "" ? 10 : screen_border_x
-screen_border_y := IniRead("fluffy-settings.ini", "settings", "screen_border_y", 10)
+screen_border_y := IniRead("settings.ini", "settings", "screen_border_y", 10)
 screen_border_y := screen_border_y = "" ? 10 : screen_border_y
-server_address := IniRead("fluffy-settings.ini", "settings", "default_server_address", "127.0.0.1:8188")
+
+server_address := IniRead("settings.ini", "settings", "default_server_address", "127.0.0.1:8188")
 ;blank means "don't autoconnect"
-input_folder := IniRead("fluffy-settings.ini", "settings", "input_folder", "images\input\")
-input_folder := input_folder = "" ? "images\input\" : input_folder
-output_folder := IniRead("fluffy-settings.ini", "settings", "output_folder", "images\output\")
-output_folder := output_folder = "" ? "images\output\" : output_folder
-preprocessor_category_name := IniRead("fluffy-settings.ini", "settings", "preprocessor_category_name", "ControlNet Preprocessors/")
+preprocessor_category_name := IniRead("settings.ini", "settings", "preprocessor_category_name", "ControlNet Preprocessors/")
 preprocessor_category_name := preprocessor_category_name = "" ? "ControlNet Preprocessors/" : preprocessor_category_name
-delete_files_on_startup := IniRead("fluffy-settings.ini", "settings", "delete_files_on_startup", 0)
+
+input_folder := IniRead("settings.ini", "settings", "input_folder", "images\input\")
+input_folder := input_folder = "" ? "images\input\" : input_folder
+output_folder := IniRead("settings.ini", "settings", "output_folder", "images\output\")
+output_folder := output_folder = "" ? "images\output\" : output_folder
+delete_input_files_on_startup := IniRead("settings.ini", "settings", "delete_input_files_on_startup", 0)
+;blank means no
+delete_output_files_on_startup := IniRead("settings.ini", "settings", "delete_output_files_on_startup", 0)
+;blank means no
+
+hotkey_toggle_overlay := IniRead("settings.ini", "settings", "hotkey_toggle_overlay", "*CapsLock")
+hotkey_toggle_overlay := hotkey_toggle_overlay = "" ? "*CapsLock" : hotkey_toggle_overlay
+hotkey_clipboard_to_source := IniRead("settings.ini", "settings", "hotkey_clipboard_to_source", "")
+;blank means no
+hotkey_clipboard_to_mask := IniRead("settings.ini", "settings", "hotkey_clipboard_to_mask", "")
+;blank means no
+hotkey_clipboard_to_controlnet := IniRead("settings.ini", "settings", "hotkey_clipboard_to_controlnet", "")
+;blank means no
+hotkey_output_to_clipboard := IniRead("settings.ini", "settings", "hotkey_output_to_clipboard", "")
 ;blank means no
 
 ;--------------------------------------------------
@@ -1554,7 +1569,7 @@ main_preview_picture_menu_output_file(ItemName, ItemPos, MyMenu) {
 
 ;main preview - clipboard
 ;--------------------------------------------------
-main_preview_picture_menu_clipboard(ItemName, ItemPos, MyMenu) {
+main_preview_picture_menu_clipboard(*) {
   if (valid_file := image_load_and_fit_clipboard(main_preview_picture_frame)) {
     inputs[main_preview_picture_frame["name"]] := valid_file
     main_preview_picture_update(0)
@@ -1652,7 +1667,7 @@ mask_picture_menu_output_file(ItemName, ItemPos, MyMenu) {
 
 ;mask - clipboard
 ;--------------------------------------------------
-mask_picture_menu_clipboard(ItemName, ItemPos, MyMenu) {
+mask_picture_menu_clipboard(*) {
   if (valid_file := image_load_and_fit_clipboard(mask_picture_frame)) {
     inputs[mask_picture_frame["name"]] := valid_file
     if (preview_images.Has("mask")) {
@@ -1755,7 +1770,7 @@ controlnet_picture_menu_output_file(ItemName, ItemPos, MyMenu) {
 
 ;controlnet - clipboard
 ;--------------------------------------------------
-controlnet_picture_menu_clipboard(ItemName, ItemPos, MyMenu) {
+controlnet_picture_menu_clipboard(*) {
   if (controlnet_picture_frame["name"] = "") {
     controlnet_picture_frame["name"] := controlnet_check_for_free_index()
   }
@@ -1925,7 +1940,7 @@ output_picture_menu_to_controlnet(ItemName, ItemPos, MyMenu) {
 
 ;output images - copy
 ;--------------------------------------------------
-output_picture_menu_copy(ItemName, ItemPos, MyMenu) {
+output_picture_menu_copy(*) {
   pToken  := Gdip_Startup()
   try {
     Gdip_SetBitmapToClipboard(pBitmap := Gdip_CreateBitmapFromFile(last_selected_output_image))
@@ -1966,10 +1981,10 @@ open_settings_file_button.OnEvent("Click", open_settings_file_button_click)
 open_settings_file_button_click(GuiCtrlObj, Info) {
   overlay_hide()
   try {
-    if (!FileExist("fluffy-settings.ini")) {
-      FileCopy("fluffy-settings.ini.example", "fluffy-settings.ini")
+    if (!FileExist("settings.ini")) {
+      FileCopy("settings.ini.example", "settings.ini")
     }
-    Run "Notepad fluffy-settings.ini"
+    Run "Notepad settings.ini"
   }
   catch Error as what_went_wrong {
     oh_no(what_went_wrong)
@@ -2001,15 +2016,24 @@ WinGetPos ,, &status_box_w, &status_box_h, status_box.Hwnd
 ;--------------------------------------------------
 ;--------------------------------------------------
 
-if (delete_files_on_startup= "DELETE") {
+if (delete_input_files_on_startup = "DELETEINPUTFILES") {
   try {
     DirDelete input_folder, 1
+  }
+  catch Error as what_went_wrong {
+    oh_no(what_went_wrong)
+  }
+}
+
+if (delete_output_files_on_startup = "DELETEOUTPUTFILES") {
+  try {
     DirDelete output_folder, 1
   }
   catch Error as what_went_wrong {
     oh_no(what_went_wrong)
   }
 }
+
 try {
   DirCreate input_folder
   DirCreate output_folder
@@ -2022,7 +2046,54 @@ if (server_address) {
   connect_to_server()
 }
 
-Hotkey "*CapsLock", overlay_toggle, "On"
+;--------------------------------------------------
+;hotkeys
+;--------------------------------------------------
+
+;toggle overlay
+if (hotkey_toggle_overlay != "") {
+  Hotkey hotkey_toggle_overlay, overlay_toggle, "On"
+}
+
+;clipboard to source
+if (hotkey_clipboard_to_source != "") {
+  Hotkey hotkey_clipboard_to_source, main_preview_picture_menu_clipboard, "On"
+}
+
+;clipboard to mask
+if (hotkey_clipboard_to_mask != "") {
+  Hotkey hotkey_clipboard_to_mask, mask_picture_menu_clipboard, "On"
+}
+
+;clipboard to controlnet
+if (hotkey_clipboard_to_controlnet != "") {
+  Hotkey hotkey_clipboard_to_controlnet, controlnet_picture_menu_clipboard, "On"
+}
+
+;output to clipboard
+if (hotkey_output_to_clipboard != "") {
+  Hotkey hotkey_output_to_clipboard, output_picture_menu_copy, "On"
+}
+
+;convenience hotkey to allow normal capslock by pushing shift+capslock
+if (hotkey_toggle_overlay = "*CapsLock") {
+  Hotkey "+CapsLock", alternate_capslock, "On"
+}
+
+alternate_capslock(KeyName) {
+  Send "{Blind}{CapsLock}"
+}
+
+#HotIf overlay_visible
+~*Esc::overlay_hide()
+~*LWin Up::overlay_hide()
+~*RWin Up::overlay_hide()
+~*!Tab::overlay_hide()
+#HotIf
+
+;HotIf "overlay_visible"
+;;nothing here yet
+;HotIf
 
 return
 
@@ -3385,7 +3456,3 @@ overlay_toggle(*) {
     overlay_hide()
   }
 }
-
-;convenience hotkey to allow normal capslock by pushing shift+capslock
-;--------------------------------------------------
-+CapsLock::Capslock
