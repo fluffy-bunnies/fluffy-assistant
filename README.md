@@ -13,11 +13,9 @@ It is currently extremely janky. Please bear with me while I try to make it less
 
 <b>Installation</b><br>
 <ul>
-  <li> Download a .zip from <a href="https://github.com/fluffy-bunnies/fluffy-assistant/releases">Releases</a><br> (Either .zip file can be used - the one with "ahk" just contains the pre-compiled scripts.)</li>
+  <li> Download the .zip from <a href="https://github.com/fluffy-bunnies/fluffy-assistant/releases">Releases</a><br> (For the pre-compiled scripts, download source code or clone the repo.)</li>
   <li> Unzip somewhere</li>
 </ul>
-
-Or alternatively, clone the repo.
 
 <b>Usage</b><br>
 <ul>
