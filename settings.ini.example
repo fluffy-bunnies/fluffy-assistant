@@ -1,0 +1,61 @@
+[settings]
+
+;------------------------------
+;Appearance
+;------------------------------
+
+background_colour=0x000000
+background_opacity=128
+control_colour=0x101010
+
+text_font=Arial
+text_size=12
+text_colour=0xB0B0B0
+
+show_labels=1
+label_font=Arial
+label_size=12
+label_colour=0xE0E0E0
+
+gap_x=25
+gap_y=25
+screen_border_x=10
+screen_border_y=10
+
+;------------------------------
+;ComfyUI
+;------------------------------
+
+default_server_address=127.0.0.1:8188
+
+preprocessor_category_name=ControlNet Preprocessors/
+
+;------------------------------
+;Files
+;------------------------------
+
+input_folder=images\input\
+output_folder=images\output\
+
+;-----Automatic File Deletion-----;
+;please use carefully
+;to delete all files from the local input folder on startup:
+;delete_input_files_on_startup=DELETEINPUTFILES
+;to delete all files from the local output folder on startup:
+;delete_output_files_on_startup=DELETEOUTPUTFILES
+
+delete_input_files_on_startup=0
+delete_output_files_on_startup=0
+
+;------------------------------
+;Hotkeys
+;------------------------------
+
+;For non-letter, non-number keys:        https://www.autohotkey.com/docs/v2/KeyList.htm
+;For modifiers:                          https://www.autohotkey.com/docs/v2/Hotkeys.htm#Symbols
+
+hotkey_toggle_overlay=*CapsLock
+hotkey_clipboard_to_source=
+hotkey_clipboard_to_mask=
+hotkey_clipboard_to_controlnet=
+hotkey_output_to_clipboard=
