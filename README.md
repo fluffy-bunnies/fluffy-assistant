@@ -13,7 +13,7 @@ It is currently extremely janky. Please bear with me while I try to make it less
 
 <b>Installation</b><br>
 <ul>
-  <li> Download the .zip from <a href="https://github.com/fluffy-bunnies/fluffy-assistant/releases">Releases</a><br> (For the pre-compiled scripts, download source code or clone the repo.)</li>
+  <li> Download the .zip from <a href="https://github.com/fluffy-bunnies/fluffy-assistant/releases">Releases</a><br> (For the uncompiled scripts, download source code or clone the repo.)</li>
   <li> Unzip somewhere</li>
 </ul>
 
