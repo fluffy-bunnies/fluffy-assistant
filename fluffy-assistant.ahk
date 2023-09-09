@@ -2091,16 +2091,9 @@ alternate_capslock(KeyName) {
 ~*!Tab::overlay_hide()
 #HotIf
 
-
 ;HotIf "overlay_visible"
 ;;nothing here yet
 ;HotIf
-
-
-;F1:: main_preview_picture_menu_clipboard()
-;F2:: mask_picture_menu_clipboard()
-;F3:: controlnet_picture_menu_clipboard()
-;F4:: output_picture_menu_copy
 
 return
 
