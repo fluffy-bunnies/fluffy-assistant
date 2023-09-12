@@ -79,7 +79,11 @@ delete_output_files_on_startup := IniRead("settings.ini", "settings", "delete_ou
 
 hotkey_toggle_overlay := IniRead("settings.ini", "settings", "hotkey_toggle_overlay", "*CapsLock")
 hotkey_toggle_overlay := hotkey_toggle_overlay = "" ? "*CapsLock" : hotkey_toggle_overlay
+hotkey_generate := IniRead("settings.ini", "settings", "hotkey_generate", "")
+;blank means no
 hotkey_clipboard_to_source := IniRead("settings.ini", "settings", "hotkey_clipboard_to_source", "")
+;blank means no
+hotkey_clipboard_to_image_prompt := IniRead("settings.ini", "settings", "hotkey_clipboard_to_image_prompt", "")
 ;blank means no
 hotkey_clipboard_to_mask := IniRead("settings.ini", "settings", "hotkey_clipboard_to_mask", "")
 ;blank means no
@@ -262,6 +266,80 @@ main_controls.SetFont("s" text_size " c" text_colour " q0", text_font)
 random_seed_refiner_checkbox.GetPos(,,, &random_seed_refiner_checkbox_h)
 random_seed_refiner_checkbox.Move(, stored_gui_y + stored_gui_h / 2 - random_seed_refiner_checkbox_h / 2,,)
 
+random_seed_refiner_checkbox.GetPos(&stored_gui_x, &stored_gui_y, &stored_gui_w, &stored_gui_h)
+main_controls.SetFont("c" label_colour " q3", label_font)
+refiner_conditioning_checkbox := main_controls.Add("CheckBox", "x" stored_gui_x + stored_gui_w + gap_x " y" stored_gui_y " Disabled", "Conditioning")
+main_controls.SetFont("s" text_size " c" text_colour " q0", text_font)
+
+;--------------------------------------------------
+;image prompt
+;--------------------------------------------------
+
+image_prompt := Gui("+AlwaysOnTop -Caption +ToolWindow +Owner" overlay.Hwnd " +LastFound", "Image Prompt")
+image_prompt.MarginX := 0
+image_prompt.MarginY := 0
+image_prompt.BackColor := transparent_bg_colour
+WinSetTransColor transparent_bg_colour
+image_prompt.SetFont("s" text_size " c" text_colour " q0", text_font)
+
+;clip vision
+;--------------------------------------------------
+clip_vision_combobox := image_prompt.Add("ComboBox", "x0 y" gap_y " w" A_ScreenWidth / 10 " Background" control_colour, ["None"])
+
+;IPAdapter
+;--------------------------------------------------
+clip_vision_combobox.GetPos(&stored_gui_x, &stored_gui_y, &stored_gui_w, &stored_gui_h)
+IPAdapter_combobox := image_prompt.Add("ComboBox", "x" stored_gui_x + stored_gui_w + gap_x " y" stored_gui_y " w" A_ScreenWidth / 10 " Background" control_colour, ["None"])
+;IPAdapter_combobox := image_prompt.Add("ComboBox", "x" stored_gui_x " y" stored_gui_y + stored_gui_h + gap_y " w" A_ScreenWidth / 10 " Background" control_colour, ["None"])
+
+IPAdapter_combobox.GetPos(&stored_gui_x, &stored_gui_y, &stored_gui_w, &stored_gui_h)
+IPAdapter_dtype_dropdownlist := image_prompt.Add("DropDownList", "x" stored_gui_x + stored_gui_w + 1 " y" stored_gui_y " w75 Background" control_colour " Choose1", ["fp16", "fp32"])
+
+;image
+;--------------------------------------------------
+clip_vision_combobox.GetPos(&stored_gui_x, &stored_gui_y, &stored_gui_w, &stored_gui_h)
+image_prompt_picture := image_prompt.Add("Picture", "x" stored_gui_x " y" stored_gui_y + stored_gui_h + 1 " w150 h150", "stuff\placeholder_pixel.bmp")
+
+;active image prompts
+;--------------------------------------------------
+image_prompt_picture.GetPos(&stored_gui_x, &stored_gui_y, &stored_gui_w, &stored_gui_h)
+;get specific value
+IPAdapter_dtype_dropdownlist.GetPos(&IPAdapter_dtype_dropdownlist_x, &IPAdapter_dtype_dropdownlist_y, &IPAdapter_dtype_dropdownlist_w, &IPAdapter_dtype_dropdownlist_h)
+image_prompt_active_listview := image_prompt.Add("ListView", "x" stored_gui_x + stored_gui_w + 1 " y" stored_gui_y " w" IPAdapter_dtype_dropdownlist_x + IPAdapter_dtype_dropdownlist_w - (stored_gui_x + stored_gui_w + 1) " h" stored_gui_h " Background" control_colour " -Multi", ["Image", "Strength", "+ Noise"])
+
+image_prompt_active_listview.GetPos(&stored_gui_x, &stored_gui_y, &stored_gui_w, &stored_gui_h)
+image_prompt_active_listview.Opt("-Redraw")
+Loop 11 {
+  image_prompt_active_listview.Add(,"")
+}
+image_prompt_active_listview.ModifyCol(1, stored_gui_w - 200)
+image_prompt_active_listview.ModifyCol(2, 100 " Float")
+image_prompt_active_listview.ModifyCol(3, "AutoHdr Float")
+image_prompt_active_listview.Delete
+image_prompt_active_listview.Opt("+Redraw")
+image_prompt_active_listview.Add(,"", "1.000", "0.000")
+
+;strength and noise augmentation
+;--------------------------------------------------
+image_prompt_picture.GetPos(&stored_gui_x, &stored_gui_y, &stored_gui_w, &stored_gui_h)
+image_prompt_strength_edit := image_prompt.Add("Edit", "x" stored_gui_x " y" stored_gui_y + stored_gui_h + 1 " w" 100 " r1 Background" control_colour " Center Limit6", "1.000")
+image_prompt_strength_updown := image_prompt.Add("UpDown", "Range0-1 0x80 -2", 0)
+
+image_prompt_strength_edit.GetPos(&stored_gui_x, &stored_gui_y, &stored_gui_w, &stored_gui_h)
+image_prompt_noise_augmentation_edit := image_prompt.Add("Edit", "x" stored_gui_x + stored_gui_w + updown_default_w + updown_offset_x + gap_x " y" stored_gui_y " w" 100 " r1 Background" control_colour " Center Limit6", "0.000")
+image_prompt_noise_augmentation_updown := image_prompt.Add("UpDown", "Range0-1 0x80 -2", 0)
+
+;add/remove buttons
+;--------------------------------------------------
+image_prompt_active_listview.GetPos(&stored_gui_x, &stored_gui_y, &stored_gui_w, &stored_gui_h)
+image_prompt_remove_button := image_prompt.Add("Button", "x0 y" stored_gui_y + stored_gui_h + 1 " h" edit_default_h " Background" background_colour, "Remove")
+;get specific value
+image_prompt_remove_button.GetPos(&image_prompt_remove_button_x, &image_prompt_remove_button_y, &image_prompt_remove_button_w, &image_prompt_remove_button_h)
+image_prompt_remove_button.Move(stored_gui_x + stored_gui_w - image_prompt_remove_button_w,,,)
+
+image_prompt_remove_button.GetPos(&stored_gui_x, &stored_gui_y, &stored_gui_w, &stored_gui_h)
+image_prompt_add_button := image_prompt.Add("Button", "x" stored_gui_x - 1 - stored_gui_w " y" stored_gui_y " w" stored_gui_w " h" stored_gui_h " Background" background_colour, "Add")
+
 ;--------------------------------------------------
 ;loras
 ;--------------------------------------------------
@@ -273,37 +351,38 @@ lora_selection.BackColor := transparent_bg_colour
 WinSetTransColor transparent_bg_colour
 lora_selection.SetFont("s" text_size " c" text_colour " q0", text_font)
 
-
 ;lora name and strength
 ;--------------------------------------------------
 lora_available_combobox := lora_selection.Add("ComboBox", "x0 y0 w" A_ScreenWidth / 5 - 1 " Background" control_colour " Choose1", ["None"])
 
 lora_available_combobox.GetPos(&stored_gui_x, &stored_gui_y, &stored_gui_w, &stored_gui_h)
-lora_strength_edit := lora_selection.Add("Edit", "x" stored_gui_x + stored_gui_w + 1 " y" stored_gui_y " w" A_ScreenWidth / 25 " r1 Background" control_colour " Center Limit6", "1.000")
+lora_strength_edit := lora_selection.Add("Edit", "x" stored_gui_x + stored_gui_w + 1 " y" stored_gui_y " w" 100 " r1 Background" control_colour " Center Limit6", "1.000")
 lora_strength_updown := lora_selection.Add("UpDown", "Range0-1 0x80 -2", 0)
 
 ;active loras
 ;--------------------------------------------------
 lora_available_combobox.GetPos(&stored_gui_x, &stored_gui_y, &stored_gui_w, &stored_gui_h)
-lora_active_listview := lora_selection.Add("ListView", "x" stored_gui_x " y" stored_gui_y + stored_gui_h + 1 " w" A_ScreenWidth / 25 * 6 " r5 Background" control_colour " -Multi", ["LORA", "Strength"])
+lora_active_listview := lora_selection.Add("ListView", "x" stored_gui_x " y" stored_gui_y + stored_gui_h + 1 " w" A_ScreenWidth / 5 + 100 " r5 Background" control_colour " -Multi", ["LORA", "Strength"])
 
+lora_active_listview.GetPos(&stored_gui_x, &stored_gui_y, &stored_gui_w, &stored_gui_h)
 Loop 6 {
   lora_active_listview.Add(,"")
 }
-lora_active_listview.ModifyCol(1, A_ScreenWidth / 5)
+lora_active_listview.ModifyCol(1, stored_gui_w - 100)
 lora_active_listview.ModifyCol(2, "AutoHdr Float")
 lora_active_listview.Delete
 lora_active_listview.Add(,"None", "1.000")
 
 ;lora add/remove buttons
 ;--------------------------------------------------
-lora_strength_edit.GetPos(&stored_gui_x, &stored_gui_y, &stored_gui_w, &stored_gui_h)
-;autofit width to longer "Remove" button before changing back to "Add"
-lora_add_button := lora_selection.Add("Button", "x" stored_gui_x + stored_gui_w + updown_default_w + updown_offset_x + 1 " y" stored_gui_y " h" stored_gui_h " Background" background_colour, "Remove")
-lora_add_button.Text := "Add"
+lora_active_listview.GetPos(&stored_gui_x, &stored_gui_y, &stored_gui_w, &stored_gui_h)
+lora_remove_button := lora_selection.Add("Button", "x0 y" stored_gui_y + stored_gui_h + 1 " h" edit_default_h " Background" background_colour, "Remove")
+;get specific value
+lora_remove_button.GetPos(&lora_remove_button_x, &lora_remove_button_y, &lora_remove_button_w, &lora_remove_button_h)
+lora_remove_button.Move(stored_gui_x + stored_gui_w - lora_remove_button_w,,,)
 
-lora_add_button.GetPos(&stored_gui_x, &stored_gui_y, &stored_gui_w, &stored_gui_h)
-lora_remove_button := lora_selection.Add("Button", "x" stored_gui_x " y" stored_gui_y + stored_gui_h + 1 " w" stored_gui_w " h" stored_gui_h " Background" background_colour, "Remove")
+lora_remove_button.GetPos(&stored_gui_x, &stored_gui_y, &stored_gui_w, &stored_gui_h)
+lora_add_button := lora_selection.Add("Button", "x" stored_gui_x - 1 - stored_gui_w " y" stored_gui_y " w" stored_gui_w " h" stored_gui_h " Background" background_colour, "Add")
 
 ;--------------------------------------------------
 ;preview (source image)
@@ -324,7 +403,7 @@ image_height_edit := preview_display.Add("Edit", "x0 y" gap_y " w100 r1 Backgrou
 image_height_updown := preview_display.Add("UpDown", "Range0-1 0x80 -2", 0)
 
 image_width_edit.GetPos(&stored_gui_x, &stored_gui_y, &stored_gui_w, &stored_gui_h)
-main_preview_picture := preview_display.Add("Picture", "x0 y" stored_gui_y + stored_gui_h + gap_y " w" A_ScreenHeight / 2 " h" A_ScreenHeight / 2, "stuff\placeholder_pixel.bmp")
+main_preview_picture := preview_display.Add("Picture", "x0 y" stored_gui_y + stored_gui_h + gap_y " w" A_ScreenWidth / 5 * 2 " h" A_ScreenHeight / 5 * 2, "stuff\placeholder_pixel.bmp")
 
 main_preview_picture.GetPos(&stored_gui_x, &stored_gui_y, &stored_gui_w, &stored_gui_h)
 ;get specific value
@@ -355,7 +434,6 @@ mask_and_controlnet.SetFont("s" text_size " c" text_colour " q0", text_font)
 
 ;mask pictures
 ;--------------------------------------------------
-
 mask_picture := mask_and_controlnet.Add("Picture", "x0 y" gap_y " w150 h150", "stuff\placeholder_pixel.bmp")
 
 mask_picture.GetPos(&stored_gui_x, &stored_gui_y, &stored_gui_w, &stored_gui_h)
@@ -445,13 +523,14 @@ controlnet_active_listview.Add(, "", "None", "1.000", "0.000", "1.000", "None")
 
 ;controlnet add/remove buttons
 ;--------------------------------------------------
-
 controlnet_active_listview.GetPos(&stored_gui_x, &stored_gui_y, &stored_gui_w, &stored_gui_h)
-controlnet_add_button := mask_and_controlnet.Add("Button", "x" stored_gui_x + stored_gui_w + 1 " y" stored_gui_y " Background" background_colour, "Remove")
-controlnet_add_button.Text := "Add"
+controlnet_remove_button := mask_and_controlnet.Add("Button", "x0 y" stored_gui_y + stored_gui_h + 1 " h" edit_default_h " Background" background_colour, "Remove")
+;get specific value
+controlnet_remove_button.GetPos(&controlnet_remove_button_x, &controlnet_remove_button_y, &controlnet_remove_button_w, &controlnet_remove_button_h)
+controlnet_remove_button.Move(stored_gui_x + stored_gui_w - controlnet_remove_button_w,,,)
 
-controlnet_add_button.GetPos(&stored_gui_x, &stored_gui_y, &stored_gui_w, &stored_gui_h)
-controlnet_remove_button := mask_and_controlnet.Add("Button", "x" stored_gui_x " y" stored_gui_y + stored_gui_h + 1 " Background" background_colour, "Remove")
+controlnet_remove_button.GetPos(&stored_gui_x, &stored_gui_y, &stored_gui_w, &stored_gui_h)
+controlnet_add_button := mask_and_controlnet.Add("Button", "x" stored_gui_x - 1 - stored_gui_w " y" stored_gui_y " w" stored_gui_w " h" stored_gui_h " Background" background_colour, "Add")
 
 ;--------------------------------------------------
 ;output image viewer
@@ -598,6 +677,21 @@ if (show_labels) {
 
   ;preview image (source)
   ;--------------------------------------------------
+  image_prompt.SetFont("s" label_size " c" label_colour " q3", label_font)
+
+  clip_vision_combobox.GetPos(&stored_gui_x, &stored_gui_y, &stored_gui_w, &stored_gui_h)
+  clip_vision_label := image_prompt.Add("Text", "x" stored_gui_x " y" stored_gui_y - label_h , "CLIP Vision")
+
+  IPAdapter_combobox.GetPos(&stored_gui_x, &stored_gui_y, &stored_gui_w, &stored_gui_h)
+  IPAdapter_label := image_prompt.Add("Text", "x" stored_gui_x " y" stored_gui_y - label_h , "IPAdapter")
+
+  IPAdapter_dtype_dropdownlist.GetPos(&stored_gui_x, &stored_gui_y, &stored_gui_w, &stored_gui_h)
+  IPAdapter_dtype_label := image_prompt.Add("Text", "x" stored_gui_x " y" stored_gui_y - label_h , "dtype")
+
+  image_prompt.SetFont("s" text_size " c" text_colour " q0", text_font)
+
+  ;preview image (source)
+  ;--------------------------------------------------
   preview_display.SetFont("s" label_size " c" label_colour " q3", label_font)
 
   image_width_edit.GetPos(&stored_gui_x, &stored_gui_y, &stored_gui_w, &stored_gui_h)
@@ -672,6 +766,15 @@ main_preview_picture_menu.Add("Clipboard", main_preview_picture_menu_clipboard)
 main_preview_picture_menu.Add()
 main_preview_picture_menu.Add("Remove", main_preview_picture_menu_remove)
 
+;image prompt
+;--------------------------------------------------
+image_prompt_picture_menu := Menu()
+image_prompt_picture_menu.Add("Inputs", inputs_existing_images_menu)
+image_prompt_picture_menu.Add("Outputs", outputs_existing_images_menu)
+image_prompt_picture_menu.Add("Clipboard", image_prompt_picture_menu_clipboard)
+image_prompt_picture_menu.Add()
+image_prompt_picture_menu.Add("Remove", image_prompt_picture_menu_remove)
+
 ;mask
 ;--------------------------------------------------
 mask_picture_menu := Menu()
@@ -696,6 +799,7 @@ controlnet_picture_menu.Add("Remove", controlnet_picture_menu_remove)
 ;--------------------------------------------------
 output_picture_menu := Menu()
 output_picture_menu.Add("Send to Source", output_picture_menu_to_source)
+output_picture_menu.Add("Send to Image Prompt", output_picture_menu_to_image_prompt)
 output_picture_menu.Add("Send to Mask", output_picture_menu_to_mask)
 output_picture_menu.Add("Send to ControlNet", output_picture_menu_to_controlnet)
 output_picture_menu.Add()
@@ -715,6 +819,7 @@ status_picture_menu.Add("Exit", exit_everything)
 ;picture frames
 ;--------------------------------------------------
 main_preview_picture_frame := create_picture_frame("source", main_preview_picture)
+image_prompt_picture_frame := create_picture_frame("", image_prompt_picture)
 mask_picture_frame := create_picture_frame("mask", mask_picture)
 mask_preview_picture_frame := create_picture_frame("mask_preview", mask_preview_picture)
 controlnet_picture_frame := create_picture_frame("", controlnet_picture)
@@ -969,6 +1074,7 @@ refiner_combobox_change(GuiCtrlObj, Info) {
     cfg_refiner_edit.Enabled := 0
     cfg_refiner_updown.Enabled := 0
     random_seed_refiner_checkbox.Enabled := 0
+    refiner_conditioning_checkbox.Enabled := 0
   }
   else {
     refiner_start_step_edit.Enabled := 1
@@ -976,6 +1082,7 @@ refiner_combobox_change(GuiCtrlObj, Info) {
     cfg_refiner_edit.Enabled := 1
     cfg_refiner_updown.Enabled := 1
     random_seed_refiner_checkbox.Enabled := 1
+    refiner_conditioning_checkbox.Enabled := 1
     refiner_start_step_edit_losefocus(refiner_start_step_edit, "")
   }
 }
@@ -1012,6 +1119,151 @@ cfg_refiner_updown_change(GuiCtrlObj, Info) {
 cfg_refiner_edit.OnEvent("LoseFocus", cfg_refiner_edit_losefocus)
 cfg_refiner_edit_losefocus(GuiCtrlObj, Info) {
   number_cleanup("7.0", "0.0", "100.0", GuiCtrlObj)
+}
+
+;--------------------------------------------------
+;image prompt
+;--------------------------------------------------
+
+;clip vision
+;--------------------------------------------------
+IPAdapter_combobox.OnEvent("Change", IPAdapter_combobox_change)
+IPAdapter_combobox_change(GuiCtrlObj, Info) {
+  if (GuiCtrlObj.Text and GuiCtrlObj.Text != "None") {
+    image_prompt_noise_augmentation_edit.Enabled := 0
+    image_prompt_noise_augmentation_updown.Enabled := 0
+  }
+  else {
+    image_prompt_noise_augmentation_edit.Enabled := 1
+    image_prompt_noise_augmentation_updown.Enabled := 1
+  }
+}
+
+;active image prompts
+;--------------------------------------------------
+image_prompt_active_listview.OnEvent("ItemSelect", image_prompt_active_listview_itemselect)
+image_prompt_active_listview_itemselect(GuiCtrlObj, Item, Selected) {
+  image_prompt_current := GuiCtrlObj.GetCount() = 1 ? 1 : GuiCtrlObj.GetNext()
+  if (image_prompt_current) {
+    image_prompt_picture_frame["name"] := GuiCtrlObj.GetText(image_prompt_current, 1)
+    if (inputs.Has(image_prompt_picture_frame["name"])) {
+      image_load_and_fit_wthout_change(inputs[image_prompt_picture_frame["name"]], image_prompt_picture_frame)
+    }
+    else {
+      image_prompt_picture_frame["GuiCtrlObj"].Value := "stuff\placeholder_pixel.bmp"
+      picture_fit_to_frame(image_prompt_picture_frame["w"], image_prompt_picture_frame["h"], image_prompt_picture_frame)
+    }
+    image_prompt_strength_edit.Value := GuiCtrlObj.GetText(image_prompt_current, 2)
+    image_prompt_noise_augmentation_edit.Value := GuiCtrlObj.GetText(image_prompt_current, 3)
+  }
+  else {
+    image_prompt_picture_frame["name"] := ""
+    ;use blank image
+    image_prompt_picture_frame["GuiCtrlObj"].Value := "stuff\placeholder_pixel.bmp"
+    picture_fit_to_frame(image_prompt_picture_frame["w"], image_prompt_picture_frame["h"], image_prompt_picture_frame)
+    image_prompt_strength_edit.Value := "1.000"
+    image_prompt_noise_augmentation_edit.Value := "0.000"
+  }
+}
+
+image_prompt_active_listview.OnEvent("DoubleClick", image_prompt_remove_button_click)
+
+;strength
+;--------------------------------------------------
+image_prompt_strength_updown.OnEvent("Change", image_prompt_strength_updown_change)
+image_prompt_strength_updown_change(GuiCtrlObj, Info) {
+  number_update(1, -10, 10, 0.01, 3, image_prompt_strength_edit, Info)
+  image_prompt_current := image_prompt_active_listview.GetCount() = 1 ? 1 : image_prompt_active_listview.GetNext()
+  if (image_prompt_current) {
+    image_prompt_active_listview.Modify(image_prompt_current, "Vis",, image_prompt_strength_edit.Value)
+  }
+}
+
+image_prompt_strength_edit.OnEvent("LoseFocus", image_prompt_strength_edit_losefocus)
+image_prompt_strength_edit_losefocus(GuiCtrlObj, Info) {
+  image_prompt_current := image_prompt_active_listview.GetCount() = 1 ? 1 : image_prompt_active_listview.GetNext()
+  if (image_prompt_current) {
+    number_cleanup(image_prompt_active_listview.GetText(image_prompt_current, 2), "-10.000", "10.000", GuiCtrlObj)
+    image_prompt_active_listview.Modify(image_prompt_current,,, GuiCtrlObj.Value)
+  }
+  else {
+    number_cleanup("1.000", "-10.000", "10.000", GuiCtrlObj)
+  }
+}
+
+;noise augmentation
+;--------------------------------------------------
+image_prompt_noise_augmentation_updown.OnEvent("Change", image_prompt_noise_augmentation_updown_change)
+image_prompt_noise_augmentation_updown_change(GuiCtrlObj, Info) {
+  number_update(0, 0, 1, 0.01, 3, image_prompt_noise_augmentation_edit, Info)
+  image_prompt_current := image_prompt_active_listview.GetCount() = 1 ? 1 : image_prompt_active_listview.GetNext()
+  if (image_prompt_current) {
+    image_prompt_active_listview.Modify(image_prompt_current, "Vis",,, image_prompt_noise_augmentation_edit.Value)
+  }
+}
+
+image_prompt_noise_augmentation_edit.OnEvent("LoseFocus", image_prompt_noise_augmentation_edit_losefocus)
+image_prompt_noise_augmentation_edit_losefocus(GuiCtrlObj, Info) {
+  image_prompt_current := image_prompt_active_listview.GetCount() = 1 ? 1 : image_prompt_active_listview.GetNext()
+  if (image_prompt_current) {
+    number_cleanup(image_prompt_active_listview.GetText(image_prompt_current, 3), "0.000", "1.000", GuiCtrlObj)
+    image_prompt_active_listview.Modify(image_prompt_current,,,, GuiCtrlObj.Value)
+  }
+  else {
+    number_cleanup("0.000", "0.000", "1.000", GuiCtrlObj)
+  }
+}
+
+;add image prompt button
+;--------------------------------------------------
+image_prompt_add_button.OnEvent("Click", image_prompt_add_button_click)
+image_prompt_add_button_click(GuiCtrlObj, Info) {
+  if (image_prompt_active_listview.GetNext() or image_prompt_active_listview.GetCount() <= 1) {
+    image_prompt_active_listview.Add("Select", "", "1.000", "0.000")
+    image_prompt_active_listview.Modify(image_prompt_active_listview.GetCount(), "Vis")
+    image_prompt_active_listview_itemselect(image_prompt_active_listview, "", "")
+  }
+  else {
+    ;if an image is selected without a row being active, a row should be automatically created
+    ;it should act as if the "Add" button gets pressed automatically
+    image_prompt_active_listview.Add("Select", image_prompt_picture_frame["name"], image_prompt_strength_edit.Value, image_prompt_noise_augmentation_edit.Value)
+    image_prompt_active_listview.Modify(image_prompt_active_listview.GetCount(), "Vis")
+    image_prompt_active_listview_itemselect(image_prompt_active_listview, "", "")
+  }
+}
+
+;remove image prompt button
+;--------------------------------------------------
+image_prompt_remove_button.OnEvent("Click", image_prompt_remove_button_click)
+image_prompt_remove_button_click(GuiCtrlObj, Info) {
+  ;if an image has been selected, it should always be deleted when "Remove" is clicked
+  if (inputs.Has(image_prompt_picture_frame["name"])) {
+    inputs.Delete(image_prompt_picture_frame["name"])
+  }
+  if (image_prompt_active_listview.GetCount() <= 1) {
+    ;"remove" is a "reset" button when there's only one row
+    image_prompt_picture_frame["name"] := ""
+    image_prompt_picture_frame["GuiCtrlObj"].Value := "stuff\placeholder_pixel.bmp"
+    picture_fit_to_frame(image_prompt_picture_frame["w"], image_prompt_picture_frame["h"], image_prompt_picture_frame)
+    image_prompt_strength_edit.Value := "1.000"
+    image_prompt_noise_augmentation_edit.Value := "0.000"
+    image_prompt_active_listview.Delete()
+    image_prompt_active_listview.Add(, "", "1.000", "0.000")
+  }
+  else {
+    image_prompt_to_remove := image_prompt_active_listview.GetNext()
+    if (image_prompt_to_remove) {
+      image_prompt_active_listview.Delete(image_prompt_active_listview.GetNext())
+      if (image_prompt_to_remove > image_prompt_active_listview.GetCount()) {
+        image_prompt_active_listview.Modify(image_prompt_active_listview.GetCount(), "Select Vis")
+      }
+      else {
+        image_prompt_active_listview.Modify(image_prompt_to_remove, "Select Vis")
+      }
+      ;takes care of cleanup
+      image_prompt_active_listview_itemselect(image_prompt_active_listview, "", "")
+    }
+  }
 }
 
 ;--------------------------------------------------
@@ -1095,7 +1347,7 @@ lora_remove_button.OnEvent("Click", lora_remove_button_click)
 lora_remove_button_click(GuiCtrlObj, Info) {
   if (lora_active_listview.GetCount() <= 1) {
     ;works like a reset button
-    lora_available_combobox.Text := ""
+    lora_available_combobox.Text := "None"
     lora_strength_edit.Value := "1.000"
     lora_active_listview.Delete()
     lora_active_listview.Add(, "None", "1.000")
@@ -1475,7 +1727,7 @@ controlnet_remove_button_click(GuiCtrlObj, Info) {
     controlnet_preview_picture_frame["GuiCtrlObj"].Value := "stuff\placeholder_pixel.bmp"
     picture_fit_to_frame(controlnet_preview_picture_frame["w"], controlnet_preview_picture_frame["h"], controlnet_preview_picture_frame)
     picture_fit_to_frame(controlnet_picture_frame["w"], controlnet_picture_frame["h"], controlnet_picture_frame)
-    controlnet_checkpoint_combobox.Text := ""
+    controlnet_checkpoint_combobox.Text := "None"
     controlnet_strength_edit.Value := "1.000"
     controlnet_start_edit.Value := "0.000"
     controlnet_end_edit.Value := "1.000"
@@ -1512,6 +1764,14 @@ output_listview_itemselect(GuiCtrlObj, Item, Selected) {
   if (output_listview.GetNext()) {
     global last_selected_output_image := output_folder output_listview.GetText(output_listview.GetNext(), 1)
     image_load_and_fit_wthout_change(last_selected_output_image, output_picture_frame)
+  }
+}
+
+output_listview.OnEvent("DoubleClick", output_listview_doubleclick)
+output_listview_doubleclick(GuiCtrlObj, Info) {
+  if (last_selected_output_image) {
+    Run last_selected_output_image
+    overlay_hide()
   }
 }
 
@@ -1618,6 +1878,138 @@ main_preview_picture_update(on_off) {
     image_height_edit.Enabled := 0
     image_height_updown.Enabled := 0
     image_height_edit.Value := main_preview_picture_frame["actual_h"]
+  }
+}
+
+;--------------------------------------------------
+;image prompt
+;--------------------------------------------------
+
+image_prompt_picture.OnEvent("ContextMenu", image_prompt_picture_contextmenu)
+image_prompt_picture_contextmenu(GuiCtrlObj, Item, IsRightClick, X, Y) {
+  inputs_existing_images_menu.Delete()
+
+  for (existing_image in inputs) {
+    inputs_existing_images_menu.Add(existing_image, image_prompt_picture_menu_file)
+  }
+  outputs_existing_images_menu.Delete()
+  while (A_Index <= output_listview.GetCount()) {
+    outputs_existing_images_menu.Add(output_listview.GetText(A_Index), image_prompt_picture_menu_output_file)
+  }
+
+  image_prompt_picture_menu.Show()
+}
+
+;image_prompt - input file
+;--------------------------------------------------
+image_prompt_picture_menu_file(ItemName, ItemPos, MyMenu) {
+  if (image_prompt_picture_frame["name"] = "") {
+    image_prompt_picture_frame["name"] := image_prompt_check_for_free_index()
+  }
+  if (valid_file := image_load_and_fit(inputs[ItemName], image_prompt_picture_frame)) {
+    inputs[image_prompt_picture_frame["name"]] := valid_file
+
+    image_prompt_current := image_prompt_active_listview.GetCount() = 1 ? 1 : image_prompt_active_listview.GetNext()
+    if (image_prompt_current) {
+      image_prompt_active_listview.Modify(image_prompt_current, "Vis", image_prompt_picture_frame["name"])
+      image_prompt_active_listview_itemselect(image_prompt_active_listview, "", "")
+    }
+    else {
+      image_prompt_add_button_click("", "")
+    }
+  }
+}
+
+;image_prompt - output file
+;--------------------------------------------------
+image_prompt_picture_menu_output_file(ItemName, ItemPos, MyMenu) {
+  if (image_prompt_picture_frame["name"] = "") {
+    image_prompt_picture_frame["name"] := image_prompt_check_for_free_index()
+  }
+  if (valid_file := image_load_and_fit(output_folder ItemName, image_prompt_picture_frame)) {
+	inputs[image_prompt_picture_frame["name"]] := valid_file
+
+    image_prompt_current := image_prompt_active_listview.GetCount() = 1 ? 1 : image_prompt_active_listview.GetNext()
+    if (image_prompt_current) {
+      image_prompt_active_listview.Modify(image_prompt_current, "Vis", image_prompt_picture_frame["name"])
+      image_prompt_active_listview_itemselect(image_prompt_active_listview, "", "")
+    }
+    else {
+      image_prompt_add_button_click("", "")
+    }
+  }
+}
+
+;image_prompt - clipboard
+;--------------------------------------------------
+image_prompt_picture_menu_clipboard(*) {
+  if (image_prompt_picture_frame["name"] = "") {
+    image_prompt_picture_frame["name"] := image_prompt_check_for_free_index()
+  }
+  if (valid_file := image_load_and_fit_clipboard(image_prompt_picture_frame)) {
+    inputs[image_prompt_picture_frame["name"]] := valid_file
+
+    image_prompt_current := image_prompt_active_listview.GetCount() = 1 ? 1 : image_prompt_active_listview.GetNext()
+    if (image_prompt_current) {
+      image_prompt_active_listview.Modify(image_prompt_current, "Vis", image_prompt_picture_frame["name"])
+      image_prompt_active_listview_itemselect(image_prompt_active_listview, "", "")
+    }
+    else {
+      ;automatically create a new row
+      image_prompt_add_button_click("", "")
+    }
+  }
+}
+
+;image_prompt - remove
+;--------------------------------------------------
+image_prompt_picture_menu_remove(ItemName, ItemPos, MyMenu) {
+  if (inputs.Has(image_prompt_picture_frame["name"])) {
+    inputs.Delete(image_prompt_picture_frame["name"])
+  }
+
+  image_prompt_picture_frame["GuiCtrlObj"].Value := "stuff\placeholder_pixel.bmp"
+  picture_fit_to_frame(image_prompt_picture_frame["w"], image_prompt_picture_frame["h"], image_prompt_picture_frame)
+
+  image_prompt_current := image_prompt_active_listview.GetCount() = 1 ? 1 : image_prompt_active_listview.GetNext()
+  if (image_prompt_current) {
+    image_prompt_active_listview.Modify(image_prompt_current, "Vis", "")
+  }
+}
+
+;image_prompt - drop
+;--------------------------------------------------
+image_prompt.OnEvent("DropFiles", image_prompt_dropfiles)
+image_prompt_dropfiles(GuiObj, GuiCtrlObj, FileArray, X, Y) {
+  if (GuiCtrlObj = image_prompt_picture) {
+    if (image_prompt_picture_frame["name"] = "") {
+      image_prompt_picture_frame["name"] := image_prompt_check_for_free_index()
+    }
+    if (valid_file := image_load_and_fit(FileArray[1], image_prompt_picture_frame)) {
+      inputs[image_prompt_picture_frame["name"]] := valid_file
+
+      image_prompt_current := image_prompt_active_listview.GetCount() = 1 ? 1 : image_prompt_active_listview.GetNext()
+      if (image_prompt_current) {
+        image_prompt_active_listview.Modify(image_prompt_current, "Vis", image_prompt_picture_frame["name"])
+        image_prompt_active_listview_itemselect(image_prompt_active_listview, "", "")
+      }
+      else {
+        image_prompt_add_button_click("", "")
+      }
+    }
+  }
+}
+
+;image_prompt - misc
+;--------------------------------------------------
+image_prompt_check_for_free_index() {
+  loop {
+    if (inputs.Has("image_prompt_" A_Index)) {
+      continue
+    }
+    else {
+      return "image_prompt_" A_Index
+    }
   }
 }
 
@@ -1895,6 +2287,29 @@ output_picture_menu_to_source(ItemName, ItemPos, MyMenu) {
   }
 }
 
+;output images - to image prompt
+;--------------------------------------------------
+output_picture_menu_to_image_prompt(ItemName, ItemPos, MyMenu) {
+  if (!last_selected_output_image) {
+    return
+  }
+  if (image_prompt_picture_frame["name"] = "") {
+    image_prompt_picture_frame["name"] := image_prompt_check_for_free_index()
+  }
+  if (valid_file := image_load_and_fit(last_selected_output_image, image_prompt_picture_frame)) {
+    inputs[image_prompt_picture_frame["name"]] := valid_file
+
+    image_prompt_current := image_prompt_active_listview.GetCount() = 1 ? 1 : image_prompt_active_listview.GetNext()
+    if (image_prompt_current) {
+      image_prompt_active_listview.Modify(image_prompt_current, "Vis", image_prompt_picture_frame["name"])
+      image_prompt_active_listview_itemselect(image_prompt_active_listview, "", "")
+    }
+    else {
+      image_prompt_add_button_click("", "")
+    }
+  }
+}
+
 ;output images - to mask
 ;--------------------------------------------------
 output_picture_menu_to_mask(ItemName, ItemPos, MyMenu) {
@@ -2001,8 +2416,17 @@ open_settings_file_button_click(GuiCtrlObj, Info) {
 main_controls.Show("Hide")
 WinGetPos ,, &main_controls_w, &main_controls_h, main_controls.Hwnd
 
+image_prompt.Show("Hide")
+WinGetPos ,, &image_prompt_w, &image_prompt_h, image_prompt.Hwnd
+
 lora_selection.Show("Hide")
 WinGetPos ,, &lora_selection_w, &lora_selection_h, lora_selection.Hwnd
+
+preview_display.Show("Hide")
+WinGetPos ,, &preview_display_w, &preview_display_h, preview_display.Hwnd
+
+mask_and_controlnet.Show("Hide")
+WinGetPos ,, &mask_and_controlnet_w, &mask_and_controlnet_h, mask_and_controlnet.Hwnd
 
 output_viewer.Show("Hide")
 WinGetPos ,, &output_viewer_w, &output_viewer_h, output_viewer.Hwnd
@@ -2015,6 +2439,9 @@ WinGetPos ,, &status_box_w, &status_box_h, status_box.Hwnd
 ;final preparations
 ;--------------------------------------------------
 ;--------------------------------------------------
+
+;in case it's not square
+picture_fit_to_frame(image_width_edit.Value, image_height_edit.Value, main_preview_picture_frame)
 
 if (delete_input_files_on_startup = "DELETEINPUTFILES") {
   try {
@@ -2055,9 +2482,20 @@ if (hotkey_toggle_overlay != "") {
   Hotkey hotkey_toggle_overlay, overlay_toggle, "On"
 }
 
+
+;generate
+if (hotkey_generate != "") {
+  Hotkey hotkey_generate, diffusion_time, "On"
+}
+
 ;clipboard to source
 if (hotkey_clipboard_to_source != "") {
   Hotkey hotkey_clipboard_to_source, main_preview_picture_menu_clipboard, "On"
+}
+
+;clipboard to image prompt
+if (hotkey_clipboard_to_image_prompt != "") {
+  Hotkey hotkey_clipboard_to_image_prompt, image_prompt_picture_menu_clipboard, "On"
 }
 
 ;clipboard to mask
@@ -2229,11 +2667,6 @@ image_load_and_fit(image, frame) {
       original_file_extension := Substr(original_file_name, Instr(original_file_name, ".",, -1))
     }
 
-    ;msgbox image "`n" "input\" frame["name"] original_file_extension
-    ;if ((image != A_WorkingDir "\input\" frame["name"] original_file_extension) and (image != "input\" frame["name"] original_file_extension)) {
-    ;  FileCopy image, "input\" frame["name"] ".*" , 1
-    ;}
-
     try {
       FileCopy image, input_folder frame["name"] ".*" , 1
     }
@@ -2401,6 +2834,30 @@ connect_to_server(*) {
   }
   else {
     refiner_combobox.Value := 1
+  }
+
+  selected_option := clip_vision_combobox.Text
+  clip_vision_combobox.Delete()
+  clip_vision_combobox.Add(["None"])
+  clip_vision_combobox.Add(scripture["CLIPVisionLoader"]["input"]["required"]["clip_name"][1])
+  if (selected_option) {
+    clip_vision_combobox.Text := selected_option
+  }
+  else {
+    clip_vision_combobox.Value := 1
+  }
+
+  selected_option := IPAdapter_combobox.Text
+  IPAdapter_combobox.Delete()
+  IPAdapter_combobox.Add(["None"])
+  if (scripture.Has("IPAdapter")) {
+    IPAdapter_combobox.Add(scripture["IPAdapter"]["input"]["required"]["model_name"][1])
+  }
+  if (selected_option) {
+    IPAdapter_combobox.Text := selected_option
+  }
+  else {
+    IPAdapter_combobox.Value := 1
   }
 
   ;with listviews (loras and controlnet), refresh selected option using itemselect instead
@@ -2610,7 +3067,7 @@ create_a_choice(x, y, node, opt, choices, v_default) {
 
 ;create a ((((masterpiece))))
 ;--------------------------------------------------
-diffusion_time() {
+diffusion_time(*) {
   change_status("painting")
 
   ;upload all input images first
@@ -2672,8 +3129,22 @@ diffusion_time() {
   thought["main_sampler"]["inputs"]["scheduler"] := scheduler_combobox.Text
 
   ;text prompts
-  thought["main_prompt_positive"]["inputs"]["text"] := prompt_positive_edit.Value
-  thought["main_prompt_negative"]["inputs"]["text"] := prompt_negative_edit.Value
+  if (prompt_positive_edit.Text = "0") {
+    thought["main_prompt_positive_zero_out"]["inputs"]["conditioning"] := ["main_prompt_positive", 0]
+    thought["main_sampler"]["inputs"]["positive"] := ["main_prompt_positive_zero_out", 0]
+  }
+  else {
+    thought["main_prompt_positive"]["inputs"]["text"] := prompt_positive_edit.Text
+    thought["main_sampler"]["inputs"]["positive"] := ["main_prompt_positive", 0]
+  }
+  if (prompt_negative_edit.Text = "0") {
+    thought["main_prompt_negative_zero_out"]["inputs"]["conditioning"] := ["main_prompt_negative", 0]
+    thought["main_sampler"]["inputs"]["negative"] := ["main_prompt_negative_zero_out", 0]
+  }
+  else {
+    thought["main_prompt_negative"]["inputs"]["text"] := prompt_negative_edit.Text
+    thought["main_sampler"]["inputs"]["negative"] := ["main_prompt_negative", 0]
+  }
 
   ;seed
   if (random_seed_checkbox.Value) {
@@ -2748,7 +3219,7 @@ diffusion_time() {
       thought["mask_grow"]["inputs"]["expand"] := mask_grow_edit.Value
       thought["mask_feather"]["inputs"]["left"] := thought["mask_feather"]["inputs"]["top"] := thought["mask_feather"]["inputs"]["right"] := thought["mask_feather"]["inputs"]["bottom"] := mask_feather_edit.Value
       if (inpainting_checkpoint_checkbox.Value) {
-        ;generate a node to vae decode it even
+        ;generate a node to vae decode
         thought["empty_latent_vae_decode"] := Map("inputs", Map("samples", ["empty_latent", 0], "vae", vae_node), "class_type", "VAEDecode")
         thought["inpaint_specific"]["inputs"]["pixels"] := ["empty_latent_vae_decode", 0]
         thought["main_sampler"]["inputs"]["latent_image"] := ["inpaint_specific", 0]
@@ -2879,8 +3350,23 @@ diffusion_time() {
 
     ;other refinement related nodes
     thought["refiner_model_loader"]["inputs"]["ckpt_name"] := refiner_combobox.Text
-    thought["refiner_prompt_positive"]["inputs"]["text"] := thought["main_prompt_positive"]["inputs"]["text"]
-    thought["refiner_prompt_negative"]["inputs"]["text"] := thought["main_prompt_negative"]["inputs"]["text"]
+
+    if (prompt_positive_edit.Text = "0") {
+      thought["refiner_prompt_positive_zero_out"]["inputs"]["conditioning"] := ["refiner_prompt_positive", 0]
+      thought["refiner_sampler"]["inputs"]["positive"] := ["refiner_prompt_positive_zero_out", 0]
+    }
+    else {
+      thought["refiner_prompt_positive"]["inputs"]["text"] := thought["main_prompt_positive"]["inputs"]["text"]
+      thought["refiner_sampler"]["inputs"]["positive"] := ["refiner_prompt_positive", 0]
+    }
+    if (prompt_negative_edit.Text = "0") {
+      thought["refiner_prompt_negative_zero_out"]["inputs"]["conditioning"] := ["refiner_prompt_negative", 0]
+      thought["refiner_sampler"]["inputs"]["negative"] := ["refiner_prompt_negative_zero_out", 0]
+    }
+    else {
+      thought["refiner_prompt_negative"]["inputs"]["text"] := thought["main_prompt_negative"]["inputs"]["text"]
+      thought["refiner_sampler"]["inputs"]["negative"] := ["refiner_prompt_negative", 0]
+    }
 
     /*this doesn't work
     ;inpainting
@@ -2896,6 +3382,120 @@ diffusion_time() {
     thought["refiner_sampler"]["inputs"]["latent_image"] := [node_to_convert, 0]
   }
 
+  ;image prompt
+  actual_image_prompt_count := 0
+  if (clip_vision_combobox.Text and clip_vision_combobox.Text != "None") {
+    if (IPAdapter_combobox.Text and IPAdapter_combobox.Text != "None") {
+      while (A_Index <= image_prompt_active_listview.GetCount()) {
+        if (image_prompt_active_listview.GetText(A_Index, 1) and image_prompt_active_listview.GetText(A_Index, 1) != "None") {
+          actual_image_prompt_count += 1
+          thought["image_prompt_image_loader_" actual_image_prompt_count] := Map(
+            "inputs", Map(
+              "image", server_image_files[image_prompt_active_listview.GetText(A_Index, 1)]
+              ,"choose file to upload", "image"
+            ),
+            "class_type", "LoadImage"
+          )
+          ;use the IPAdapter custom node
+          thought["IPAdapter_" actual_image_prompt_count] := Map(
+            "inputs", Map(
+              "weight", image_prompt_active_listview.GetText(A_Index, 2) > 3 ? 3 : image_prompt_active_listview.GetText(A_Index, 2) < -1 ? -1 : image_prompt_active_listview.GetText(A_Index, 2)
+              ,"model_name", IPAdapter_combobox.Text
+              ,"dtype", IPAdapter_dtype_dropdownlist.Text
+              ,"model", ["IPAdapter_" actual_image_prompt_count - 1, 0]
+              ,"image", ["image_prompt_image_loader_" actual_image_prompt_count, 0]
+              ,"clip_vision", ["clip_vision_loader", 0]
+            ),
+            "class_type", "IPAdapter"
+          )
+
+          ;refiner
+          if (refiner_combobox.Text and refiner_combobox.Text != "None" and refiner_conditioning_checkbox.Value) {
+            thought["refiner_IPAdapter_" actual_image_prompt_count] := Map(
+              "inputs", Map(
+                "weight", thought["IPAdapter_" actual_image_prompt_count]["inputs"]["weight"]
+                ,"model_name", thought["IPAdapter_" actual_image_prompt_count]["inputs"]["model_name"]
+                ,"dtype", thought["IPAdapter_" actual_image_prompt_count]["inputs"]["dtype"]
+                ,"model", ["refiner_IPAdapter_" actual_image_prompt_count - 1, 0]
+                ,"image", thought["IPAdapter_" actual_image_prompt_count]["inputs"]["image"]
+                ,"clip_vision", thought["IPAdapter_" actual_image_prompt_count]["inputs"]["clip_vision"]
+              ),
+              "class_type", "IPAdapter"
+            )
+          }
+        }
+      }
+      if (actual_image_prompt_count) {
+        thought["clip_vision_loader"]["inputs"]["clip_name"] := clip_vision_combobox.Text
+        thought["IPAdapter_1"]["inputs"]["model"] := ["checkpoint_loader", 0]
+        thought["main_sampler"]["inputs"]["model"] := ["IPAdapter_" actual_image_prompt_count, 0]
+        if (upscale_combobox.Text and upscale_combobox.Text != "None") {
+          thought["upscale_sampler"]["inputs"]["model"] := ["IPAdapter_" actual_image_prompt_count, 0]
+        }
+        if (refiner_combobox.Text and refiner_combobox.Text != "None" and refiner_conditioning_checkbox.Value) {
+          thought["refiner_IPAdapter_1"]["inputs"]["model"] := ["refiner_model_loader", 0]
+          thought["refiner_sampler"]["inputs"]["model"] := ["refiner_IPAdapter_" actual_image_prompt_count, 0]
+        }
+      }
+    }
+    else {
+      while (A_Index <= image_prompt_active_listview.GetCount()) {
+        if (image_prompt_active_listview.GetText(A_Index, 1) and image_prompt_active_listview.GetText(A_Index, 1) != "None") {
+          actual_image_prompt_count += 1
+          thought["image_prompt_image_loader_" actual_image_prompt_count] := Map(
+            "inputs", Map(
+              "image", server_image_files[image_prompt_active_listview.GetText(A_Index, 1)]
+              ,"choose file to upload", "image"
+            ),
+            "class_type", "LoadImage"
+          )
+          ;use "clip vision encode" and "unclip conditioning" nodes
+          thought["clip_vision_encode_" actual_image_prompt_count] := Map(
+            "inputs", Map(
+              "clip_vision", ["clip_vision_loader", 0]
+              ,"image", ["image_prompt_image_loader_" actual_image_prompt_count, 0]
+            ),
+            "class_type", "CLIPVisionEncode"
+          )
+          thought["unclip_conditioning_" actual_image_prompt_count] := Map(
+            "inputs", Map(
+              "strength", image_prompt_active_listview.GetText(A_Index, 2)
+              ,"noise_augmentation", image_prompt_active_listview.GetText(A_Index, 3)
+              ,"conditioning", ["unclip_conditioning_" actual_image_prompt_count - 1, 0]
+              ,"clip_vision_output", ["clip_vision_encode_" actual_image_prompt_count, 0]
+            ),
+            "class_type", "unCLIPConditioning"
+          )
+
+          ;refiner
+          if (refiner_combobox.Text and refiner_combobox.Text != "None" and refiner_conditioning_checkbox.Value) {
+            thought["refiner_unclip_conditioning_" actual_image_prompt_count] := Map(
+              "inputs", Map(
+                "strength", thought["unclip_conditioning_" actual_image_prompt_count]["inputs"]["strength"]
+                ,"noise_augmentation", thought["unclip_conditioning_" actual_image_prompt_count]["inputs"]["noise_augmentation"]
+                ,"conditioning", ["refiner_unclip_conditioning_" actual_image_prompt_count - 1, 0]
+                ,"clip_vision_output", thought["unclip_conditioning_" actual_image_prompt_count]["inputs"]["clip_vision_output"]
+              ),
+              "class_type", "unCLIPConditioning"
+            )
+          }
+        }
+      }
+      if (actual_image_prompt_count) {
+        thought["clip_vision_loader"]["inputs"]["clip_name"] := clip_vision_combobox.Text
+        thought["unclip_conditioning_1"]["inputs"]["conditioning"] := prompt_positive_edit.Text = "0" ? ["main_prompt_positive_zero_out", 0] : ["main_prompt_positive", 0]
+        thought["main_sampler"]["inputs"]["positive"] := ["unclip_conditioning_" actual_image_prompt_count, 0]
+        if (upscale_combobox.Text and upscale_combobox.Text != "None") {
+          thought["upscale_sampler"]["inputs"]["positive"] := ["unclip_conditioning_" actual_image_prompt_count, 0]
+        }
+        if (refiner_combobox.Text and refiner_combobox.Text != "None" and refiner_conditioning_checkbox.Value) {
+          thought["refiner_unclip_conditioning_1"]["inputs"]["conditioning"] := prompt_positive_edit.Text = "0" ? ["refiner_prompt_positive_zero_out", 0] : ["refiner_prompt_positive", 0]
+          thought["refiner_sampler"]["inputs"]["positive"] := ["refiner_unclip_conditioning_" actual_image_prompt_count, 0]
+        }
+      }
+    }
+  }
+
   ;lora
   actual_lora_count := 0
   while (A_Index <= lora_active_listview.GetCount()) {
@@ -2906,19 +3506,52 @@ diffusion_time() {
           "lora_name", lora_active_listview.GetText(A_Index, 1)
           ,"strength_model", lora_active_listview.GetText(A_Index, 2)
           ,"strength_clip", lora_active_listview.GetText(A_Index, 2)
-          ,"model", actual_lora_count = 1 ? ["checkpoint_loader", 0] : ["lora_" actual_lora_count - 1, 0]
-          ,"clip", actual_lora_count = 1 ? ["checkpoint_loader", 1] : ["lora_" actual_lora_count - 1, 1]
+          ,"model", ["lora_" actual_lora_count - 1, 0]
+          ,"clip", ["lora_" actual_lora_count - 1, 1]
         ),
         "class_type", "LoraLoader"
       )
+
+      ;refiner
+      if (refiner_combobox.Text and refiner_combobox.Text != "None" and refiner_conditioning_checkbox.Value) {
+        thought["refiner_lora_" actual_lora_count] := Map(
+          "inputs", Map(
+            "lora_name", thought["lora_" actual_lora_count]["inputs"]["lora_name"]
+            ,"strength_model", thought["lora_" actual_lora_count]["inputs"]["strength_model"]
+            ,"strength_clip", thought["lora_" actual_lora_count]["inputs"]["strength_clip"]
+            ,"model", ["refiner_lora_" actual_lora_count - 1, 0]
+            ,"clip", ["refiner_lora_" actual_lora_count - 1, 1]
+          ),
+          "class_type", "LoraLoader"
+        )
+      }
     }
   }
   if (actual_lora_count) {
+    if (actual_image_prompt_count and IPAdapter_combobox.Text and IPAdapter_combobox.Text != "None") {
+      thought["lora_1"]["inputs"]["model"] := ["IPAdapter_" actual_image_prompt_count, 0]
+    }
+    else {
+      thought["lora_1"]["inputs"]["model"] := ["checkpoint_loader", 0]
+    }
+    thought["lora_1"]["inputs"]["clip"] := ["checkpoint_loader", 1]
     thought["main_prompt_positive"]["inputs"]["clip"] := ["lora_" actual_lora_count, 1]
     thought["main_prompt_negative"]["inputs"]["clip"] := ["lora_" actual_lora_count, 1]
     thought["main_sampler"]["inputs"]["model"] := ["lora_" actual_lora_count, 0]
     if (upscale_combobox.Text and upscale_combobox.Text != "None") {
       thought["upscale_sampler"]["inputs"]["model"] := ["lora_" actual_lora_count, 0]
+    }
+    if (refiner_combobox.Text and refiner_combobox.Text != "None" and refiner_conditioning_checkbox.Value) {
+      if (actual_image_prompt_count and IPAdapter_combobox.Text and IPAdapter_combobox.Text != "None") {
+        thought["refiner_lora_1"]["inputs"]["model"] := ["refiner_IPAdapter_" actual_image_prompt_count, 0]
+      }
+      else {
+        thought["refiner_lora_1"]["inputs"]["model"] := ["refiner_model_loader", 0]
+      }
+      thought["refiner_lora_1"]["inputs"]["clip"] := ["refiner_model_loader", 1]
+      thought["refiner_prompt_positive"]["inputs"]["clip"] := ["refiner_lora_" actual_lora_count, 1]
+      thought["refiner_prompt_negative"]["inputs"]["clip"] := ["refiner_lora_" actual_lora_count, 1]
+      thought["refiner_sampler"]["inputs"]["model"] := ["refiner_lora_" actual_lora_count, 0]
     }
   }
 
@@ -2928,6 +3561,7 @@ diffusion_time() {
     ;only add controlnet rows which have a valid checkpoint and image selected
     if (controlnet_active_listview.GetText(A_Index, 1) and controlnet_active_listview.GetText(A_Index, 2) and controlnet_active_listview.GetText(A_Index, 2) != "None") {
       actual_controlnet_count += 1
+
       ;model loader node
       thought["controlnet_model_loader_" actual_controlnet_count] := Map(
         "inputs", Map(
@@ -2936,6 +3570,7 @@ diffusion_time() {
         ),
         "class_type", "DiffControlNetLoader"
       )
+
       ;image loader node
       thought["controlnet_image_loader_" actual_controlnet_count] := Map(
         "inputs", Map(
@@ -2944,6 +3579,7 @@ diffusion_time() {
         ),
         "class_type", "LoadImage"
       )
+
       ;apply controlnet node
       ;the image input will come straight from the loader unless there's an upscale
       ;or preprocessor, in which case the input will get replaced further down
@@ -2952,13 +3588,14 @@ diffusion_time() {
           "strength", controlnet_active_listview.GetText(A_Index, 3)
           ,"start_percent", controlnet_active_listview.GetText(A_Index, 4)
           ,"end_percent", controlnet_active_listview.GetText(A_Index, 5)
-          ,"positive", actual_controlnet_count = 1 ? ["main_prompt_positive", 0] : ["controlnet_apply_" actual_controlnet_count - 1, 0]
-          ,"negative", actual_controlnet_count = 1 ? ["main_prompt_negative", 0] : ["controlnet_apply_" actual_controlnet_count - 1, 1]
+          ,"positive", ["controlnet_apply_" actual_controlnet_count - 1, 0]
+          ,"negative", ["controlnet_apply_" actual_controlnet_count - 1, 1]
           ,"control_net", ["controlnet_model_loader_" actual_controlnet_count, 0]
           ,"image", ["controlnet_image_loader_" actual_controlnet_count, 0]
         ),
         "class_type", "ControlNetApplyAdvanced"
       )
+
       ;preprocessor
       ;if present, adjust noodle path
       if (controlnet_active_listview.GetText(A_Index, 6) and controlnet_active_listview.GetText(A_Index, 6) != "None") {
@@ -3057,14 +3694,48 @@ diffusion_time() {
           thought["controlnet_apply_" actual_controlnet_count]["inputs"]["image"] := ["controlnet_image_loader_" actual_controlnet_count, 0]
         }
       }
+
+      ;refiner
+      if (refiner_combobox.Text and refiner_combobox.Text != "None" and refiner_conditioning_checkbox.Value) {
+        thought["refiner_controlnet_apply_" actual_controlnet_count] := Map(
+          "inputs", Map(
+            "strength", thought["controlnet_apply_" actual_controlnet_count]["inputs"]["strength"]
+            ,"start_percent", thought["controlnet_apply_" actual_controlnet_count]["inputs"]["start_percent"]
+            ,"end_percent", thought["controlnet_apply_" actual_controlnet_count]["inputs"]["end_percent"]
+            ,"positive", ["refiner_controlnet_apply_" actual_controlnet_count - 1, 0]
+            ,"negative", ["refiner_controlnet_apply_" actual_controlnet_count - 1, 1]
+            ,"control_net", thought["controlnet_apply_" actual_controlnet_count]["inputs"]["control_net"]
+            ,"image", thought["controlnet_apply_" actual_controlnet_count]["inputs"]["image"]
+          ),
+          "class_type", "ControlNetApplyAdvanced"
+        )
+      }
     }
   }
   if (actual_controlnet_count) {
+    if (actual_image_prompt_count and (!IPAdapter_combobox.Text or IPAdapter_combobox.Text = "None")) {
+      thought["controlnet_apply_1"]["inputs"]["positive"] := ["unclip_conditioning_" actual_image_prompt_count, 0]
+    }
+    else {
+      thought["controlnet_apply_1"]["inputs"]["positive"] := prompt_positive_edit.Text = "0" ? ["main_prompt_positive_zero_out", 0] : ["main_prompt_positive", 0]
+    }
+    thought["controlnet_apply_1"]["inputs"]["negative"] := prompt_negative_edit.Text = "0" ? ["main_prompt_negative_zero_out", 0] : ["main_prompt_negative", 0]
     thought["main_sampler"]["inputs"]["positive"] := ["controlnet_apply_" actual_controlnet_count, 0]
     thought["main_sampler"]["inputs"]["negative"] := ["controlnet_apply_" actual_controlnet_count, 1]
     if (upscale_combobox.Text and upscale_combobox.Text != "None") {
       thought["upscale_sampler"]["inputs"]["positive"] := ["controlnet_apply_" actual_controlnet_count, 0]
       thought["upscale_sampler"]["inputs"]["negative"] := ["controlnet_apply_" actual_controlnet_count, 1]
+    }
+    if (refiner_combobox.Text and refiner_combobox.Text != "None" and refiner_conditioning_checkbox.Value) {
+      if (actual_image_prompt_count and (!IPAdapter_combobox.Text or IPAdapter_combobox.Text = "None")) {
+        thought["refiner_controlnet_apply_1"]["inputs"]["positive"] := ["refiner_unclip_conditioning_" actual_image_prompt_count, 0]
+      }
+      else {
+        thought["refiner_controlnet_apply_1"]["inputs"]["positive"] := prompt_positive_edit.Text = "0" ? ["refiner_prompt_positive_zero_out", 0] : ["refiner_prompt_positive", 0]
+      }
+      thought["refiner_controlnet_apply_1"]["inputs"]["negative"] := prompt_negative_edit.Text = "0" ? ["refiner_prompt_negative_zero_out", 0] : ["refiner_prompt_negative", 0]
+      thought["refiner_sampler"]["inputs"]["positive"] := ["refiner_controlnet_apply_" actual_controlnet_count, 0]
+      thought["refiner_sampler"]["inputs"]["negative"] := ["refiner_controlnet_apply_" actual_controlnet_count, 1]
     }
   }
 
@@ -3413,18 +4084,16 @@ oh_no(error_message) {
 
 ;--------------------------------------------------
 ;--------------------------------------------------
-;hotkeys
+;overlay
 ;--------------------------------------------------
 ;--------------------------------------------------
 
-;--------------------------------------------------
-;hide and show the overlay
-;--------------------------------------------------
 overlay_show(*) {
   overlay.Show()
   main_controls.Show("x" screen_border_x " y" A_ScreenHeight - screen_border_y - main_controls_h  " NoActivate")
-  lora_selection.Show("x" screen_border_x " y" A_ScreenHeight - screen_border_y - main_controls_h - lora_selection_h " NoActivate")
-  preview_display.Show("x" A_ScreenWidth / 2 " y" screen_border_y " NoActivate")
+  image_prompt.Show("x" screen_border_x " y" A_ScreenHeight - screen_border_y - main_controls_h - image_prompt_h " NoActivate")
+  lora_selection.Show("x" screen_border_x + image_prompt_w + gap_x " y" A_ScreenHeight - screen_border_y - main_controls_h - lora_selection_h " NoActivate")
+  preview_display.Show("x" A_ScreenWidth - screen_border_x - output_viewer_w - gap_y - preview_display_w " y" screen_border_y " NoActivate")
   mask_and_controlnet.Show("x" screen_border_x " y" screen_border_y " NoActivate")
   ;controlnet preprocessor options pretend to belong to the other gui
   WinGetPos &mask_and_controlnet_x, &mask_and_controlnet_y, &mask_and_controlnet_w, &mask_and_controlnet_h, mask_and_controlnet.Hwnd
@@ -3438,6 +4107,7 @@ overlay_show(*) {
 overlay_hide(*) {
   overlay.Hide()
   main_controls.Hide()
+  image_prompt.Hide()
   lora_selection.Hide()
   preview_display.Hide()
   mask_and_controlnet.Hide()
