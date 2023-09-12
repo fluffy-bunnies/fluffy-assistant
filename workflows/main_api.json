@@ -427,5 +427,98 @@
       ]
     },
     "class_type": "ImageBatch"
+  },
+  "clip_vision_loader": {
+    "inputs": {
+      "clip_name": "clip_vision_g.safetensors"
+    },
+    "class_type": "CLIPVisionLoader"
+  },
+  "clip_vision_encode_1": {
+    "inputs": {
+      "clip_vision": [
+        "clip_vision_loader",
+        0
+      ],
+      "image": [
+        "image_prompt_image_loader_1",
+        0
+      ]
+    },
+    "class_type": "CLIPVisionEncode"
+  },
+  "image_prompt_image_loader_1": {
+    "inputs": {
+      "image": "example.png",
+      "choose file to upload": "image"
+    },
+    "class_type": "LoadImage"
+  },
+  "unclip_conditioning_1": {
+    "inputs": {
+      "strength": 1,
+      "noise_augmentation": 0,
+      "clip_vision_output": [
+        "clip_vision_encode_1",
+        0
+      ]
+    },
+    "class_type": "unCLIPConditioning"
+  },
+  "IPAdapter_1": {
+    "inputs": {
+      "weight": 1,
+      "model_name": "ip-adapter_sd15.bin",
+      "dtype": "fp16",
+      "model": [
+        "checkpoint_loader",
+        0
+      ],
+      "image": [
+        "image_prompt_image_loader_1",
+        0
+      ],
+      "clip_vision": [
+        "clip_vision_loader",
+        0
+      ]
+    },
+    "class_type": "IPAdapter"
+  },
+  "main_prompt_positive_zero_out": {
+    "inputs": {
+      "conditioning": [
+        "main_prompt_positive",
+        0
+      ]
+    },
+    "class_type": "ConditioningZeroOut"
+  },
+  "main_prompt_negative_zero_out": {
+    "inputs": {
+      "conditioning": [
+        "main_prompt_negative",
+        0
+      ]
+    },
+    "class_type": "ConditioningZeroOut"
+  },
+  "refiner_prompt_positive_zero_out": {
+    "inputs": {
+      "conditioning": [
+        "refiner_prompt_positive",
+        0
+      ]
+    },
+    "class_type": "ConditioningZeroOut"
+  },
+  "refiner_prompt_negative_zero_out": {
+    "inputs": {
+      "conditioning": [
+        "refiner_prompt_negative",
+        0
+      ]
+    },
+    "class_type": "ConditioningZeroOut"
   }
 }
