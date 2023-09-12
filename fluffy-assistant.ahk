@@ -675,7 +675,7 @@ if (show_labels) {
   ;revert font just in case
   main_controls.SetFont("s" text_size " c" text_colour " q0", text_font)
 
-  ;preview image (source)
+  ;image prompt
   ;--------------------------------------------------
   image_prompt.SetFont("s" label_size " c" label_colour " q3", label_font)
 
