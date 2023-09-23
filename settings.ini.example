@@ -26,9 +26,37 @@ screen_border_y=10
 ;ComfyUI
 ;------------------------------
 
-default_server_address=127.0.0.1:8188
+;leave blank to avoid connection attempt on startup
+;127.0.0.1:8188 is the default address for a local installation
+default_server_address=
 
-preprocessor_category_name=ControlNet Preprocessors/
+;controlnet preprocessors use custom nodes:
+;https://github.com/Fannovel16/comfyui_controlnet_aux
+;set to 1 to attempt to use if installed
+controlnet_preprocessor_nodes=1
+
+;IPAdapter uses custom nodes:
+;https://github.com/cubiq/ComfyUI_IPAdapter_plus
+;set to 1 to attempt to use if installed
+IPAdapter_nodes=1
+
+;------------------------------
+;Horde
+;------------------------------
+
+;leave blank to avoid connection attempt on startup
+;stablehorde.net is the default AI Horde instance
+horde_default_server_address=
+
+;use 0000000000 (or leave blank) to use anonymously
+horde_api_key=664a30ec-0760-4f29-b634-00d2bee11f77
+
+horde_use_specific_worker=
+horde_allow_nsfw=0
+horde_replacement_filter=1
+horde_allow_untrusted_workers=1
+horde_allow_slow_workers=1
+horde_share_with_laion=1
 
 ;------------------------------
 ;Files
@@ -36,16 +64,19 @@ preprocessor_category_name=ControlNet Preprocessors/
 
 input_folder=images\input\
 output_folder=images\output\
+horde_output_folder=images\horde_output\
 
 ;-----Automatic File Deletion-----;
 ;please use carefully
+
 ;to delete all files from the local input folder on startup:
 ;delete_input_files_on_startup=DELETEINPUTFILES
+
 ;to delete all files from the local output folder on startup:
 ;delete_output_files_on_startup=DELETEOUTPUTFILES
 
-delete_input_files_on_startup=0
-delete_output_files_on_startup=0
+;to delete all files from the local horde output folder on startup:
+;delete_horde_output_files_on_startup=DELETEHORDEOUTPUTFILES
 
 ;------------------------------
 ;Hotkeys
@@ -54,10 +85,20 @@ delete_output_files_on_startup=0
 ;For non-letter, non-number keys:        https://www.autohotkey.com/docs/v2/KeyList.htm
 ;For modifiers:                          https://www.autohotkey.com/docs/v2/Hotkeys.htm#Symbols
 
-hotkey_toggle_overlay=*CapsLock
+hotkey_toggle_overlay=CapsLock
+
+hotkey_toggle_comfy_overlay=
+
 hotkey_generate=
 hotkey_clipboard_to_source=
 hotkey_clipboard_to_image_prompt=
 hotkey_clipboard_to_mask=
 hotkey_clipboard_to_controlnet=
 hotkey_output_to_clipboard=
+
+hotkey_toggle_horde_overlay=
+
+hotkey_horde_generate=
+hotkey_horde_clipboard_to_source=
+hotkey_horde_clipboard_to_mask=
+hotkey_horde_output_to_clipboard=
