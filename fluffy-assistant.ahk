@@ -6522,6 +6522,9 @@ shutdown_cleanup(*) {
   if (WinExist(assistant_script " ahk_class AutoHotkey")) {
     WinKill
   }
+  if (WinExist(horde_assistant_script " ahk_class AutoHotkey")) {
+    WinKill
+  }
   if (IsSet(pToken)) {
     try {
       Gdip_Shutdown(pToken)
