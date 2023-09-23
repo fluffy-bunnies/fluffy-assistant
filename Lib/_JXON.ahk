@@ -1,4 +1,5 @@
 ﻿;https://github.com/TheArkive/JXON_ahk2
+;dump booleans with the strings "true" or "false"
 
 ;;;; AHK v2
 ; Example ===================================================================================
@@ -192,7 +193,10 @@ Jxon_Dump(obj, indent:="", lvl:=1) {
         return obj
 
     Else ; String
-        return escape_str(obj)
+		If (obj = "true" || obj = "false")
+			return obj
+		Else
+			return escape_str(obj)
 
     escape_str(obj) {
         obj := StrReplace(obj,"\","\\")
