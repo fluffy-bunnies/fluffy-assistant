@@ -15,7 +15,6 @@ catch {
   Msgbox "This script is not intended to be run manually."
   return
 }
-;msgbox main_script
 DetectHiddenWindows True
 SetTitleMatchMode 2
 
@@ -63,6 +62,7 @@ return
 send_something_forward(something) {
   con_struct_ion := Buffer(A_PtrSize * 3)
   if (Type(something) = "String") {
+    something := "comfy" something
     NumPut("Ptr", ((StrLen(something) + 1) * 2), con_struct_ion, A_PtrSize)
     NumPut("Ptr",  StrPtr(something), con_struct_ion, A_ptrSize * 2)
   }
