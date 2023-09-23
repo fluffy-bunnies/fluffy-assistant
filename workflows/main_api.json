@@ -169,13 +169,6 @@
     },
     "class_type": "UpscaleModelLoader"
   },
-  "upscale_resize": {
-    "inputs": {
-      "upscale_method": "nearest-exact",
-      "scale_by": 1
-    },
-    "class_type": "ImageScaleBy"
-  },
   "upscale_with_model": {
     "inputs": {
       "upscale_model": [
@@ -385,26 +378,6 @@
     },
     "class_type": "LoadImage"
   },
-  "controlnet_upscale_with_model_1": {
-    "inputs": {
-      "upscale_model": [
-        "upscale_model_loader",
-        0
-      ]
-    },
-    "class_type": "ImageUpscaleWithModel"
-  },
-  "controlnet_upscale_resize_1": {
-    "inputs": {
-      "upscale_method": "nearest-exact",
-      "scale_by": 1,
-      "image": [
-        "controlnet_upscale_with_model_1",
-        0
-      ]
-    },
-    "class_type": "ImageScaleBy"
-  },
   "mask_from_image": {
     "inputs": {
       "color": 0,
@@ -465,26 +438,6 @@
     },
     "class_type": "unCLIPConditioning"
   },
-  "IPAdapter_1": {
-    "inputs": {
-      "weight": 1,
-      "model_name": "ip-adapter_sd15.bin",
-      "dtype": "fp16",
-      "model": [
-        "checkpoint_loader",
-        0
-      ],
-      "image": [
-        "image_prompt_image_loader_1",
-        0
-      ],
-      "clip_vision": [
-        "clip_vision_loader",
-        0
-      ]
-    },
-    "class_type": "IPAdapter"
-  },
   "main_prompt_positive_zero_out": {
     "inputs": {
       "conditioning": [
@@ -520,5 +473,43 @@
       ]
     },
     "class_type": "ConditioningZeroOut"
+  },
+  "IPAdapter_loader": {
+    "inputs": {
+      "ipadapter_file": "ip-adapter-plus_sd15.bin"
+    },
+    "class_type": "IPAdapterModelLoader"
+  },
+  "IPAdapter_apply_1": {
+    "inputs": {
+      "weight": 1,
+      "noise": 0,
+      "ipadapter": [
+        "IPAdapter_loader",
+        0
+      ],
+      "clip_vision": [
+        "clip_vision_loader",
+        0
+      ],
+      "image": [
+        "image_prompt_image_loader_1",
+        0
+      ],
+      "model": [
+        "checkpoint_loader",
+        0
+      ]
+    },
+    "class_type": "IPAdapterApply"
+  },
+  "upscale_resize": {
+    "inputs": {
+      "upscale_method": "nearest-exact",
+      "width": 512,
+      "height": 512,
+      "crop": "center"
+    },
+    "class_type": "ImageScale"
   }
 }
