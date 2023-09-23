@@ -1,6 +1,6 @@
-;https://www.autohotkey.com/boards/viewtopic.php?f=82&t=112741
-;Chr to Char
-;and error with empty string
+;https://www.autohotkey.com/boards/viewtopic.php?t=112741
+;Chr changed to Char
+;default to empty string
 LC_UriEncode(Uri, RE := "[0-9A-Za-z]")
 {
     Var := Buffer(StrPut(Uri, "UTF-8"), 0)
