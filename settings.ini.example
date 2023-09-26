@@ -66,6 +66,9 @@ input_folder=images\input\
 output_folder=images\output\
 horde_output_folder=images\horde_output\
 
+;folder used for saving snapshots of current generation parameters
+save_folder=save\
+
 ;-----Automatic File Deletion-----;
 ;please use carefully
 
@@ -102,3 +105,7 @@ hotkey_horde_generate=
 hotkey_horde_clipboard_to_source=
 hotkey_horde_clipboard_to_mask=
 hotkey_horde_output_to_clipboard=
+
+;press F-keys (F1 to F12) to quickload
+;press Shift+F-key to quicksave
+use_save_and_load_hotkeys=1
