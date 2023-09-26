@@ -31,7 +31,8 @@ fluffy-assistant is an interface for ComfyUI created to assist with image genera
 <b>Notes</b><br>
 <ul>
 <li>For more options, make a copy of the settings.ini.example file, rename it to settings.ini and open with a text editor (or click on "Open Settings File" and the script will attempt to do this automatically with Notepad).</li>
-<li>By default, CapsLock is used to toggle the overlay's visibility and is the only active hotkey. This can be changed or disabled. IF YOU CANNOT STOP SHOUTING, press CapsLock while holding down a modifier key (press Shift+CapsLock for example).</li>
+<li>By default, CapsLock is used to toggle the overlay's visibility. This can be changed or disabled. IF YOU CANNOT STOP SHOUTING, press CapsLock while holding down a modifier key (press Shift+CapsLock for example).</li>
+<li>Pressing an F-key (F1 to F12) loads a saved state. Pressing Shift+F-key saves the current generation parameters to the corresponding slot. This is enabled by default to enable some minor protection against bugs.</li>
 <li>Other hotkeys can be set in the settings file for clipboard operation shortcuts or to toggle only one specific overlay.</li>
 <li>By default, the script does not automatically connect to any server. Save an address to change this behaviour.</li>
 <br>
@@ -43,5 +44,5 @@ fluffy-assistant is an interface for ComfyUI created to assist with image genera
 <li>For the Horde, sharing generations with LAION is turned on by default. This can be turned off, but leaving it on benefits the quality of future AI and society will love you for it.</li>
 <li>For the Horde, NSFW results are turned off by default. This can be changed in the settings to disable all censorship with <a href="https://github.com/Haidra-Org/AI-Horde/blob/main/FAQ.md#do-you-censor-generations">one exception</a>. The "Replacement Filter" option is intended to prevent users from ending up in the naughty corner unintentionally because of this.</li>
 <br>
-<li>The little assistant character can be replaced with any other .png file. Replace the assistant.png file with a different one with the same name to do so.</li>
+<li>The little assistant character can be changed by replacing assistant.png with another file using the same name.</li>
 </ul>
