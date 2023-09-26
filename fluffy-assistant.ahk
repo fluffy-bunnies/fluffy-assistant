@@ -97,6 +97,8 @@ output_folder := IniRead("settings.ini", "settings", "output_folder", "images\ou
 output_folder := output_folder = "" ? "images\output\" : output_folder
 horde_output_folder := IniRead("settings.ini", "settings", "horde_output_folder", "images\horde_output\")
 horde_output_folder := horde_output_folder = "" ? "images\horde_output\" : horde_output_folder
+save_folder := IniRead("settings.ini", "settings", "save_folder", "save\")
+save_folder := save_folder = "" ? "save\" : save_folder
 
 delete_input_files_on_startup := IniRead("settings.ini", "settings", "delete_input_files_on_startup", 0)
 ;blank means no
@@ -106,7 +108,7 @@ delete_horde_output_files_on_startup := IniRead("settings.ini", "settings", "del
 ;blank means no
 
 hotkey_toggle_overlay := IniRead("settings.ini", "settings", "hotkey_toggle_overlay", "CapsLock")
-;blank means no
+;blank means no, but use capslock if unspecified
 hotkey_toggle_comfy_overlay := IniRead("settings.ini", "settings", "hotkey_toggle_comfy_overlay", "")
 ;blank means no
 hotkey_generate := IniRead("settings.ini", "settings", "hotkey_generate", "")
@@ -131,6 +133,9 @@ hotkey_horde_clipboard_to_mask := IniRead("settings.ini", "settings", "hotkey_ho
 ;blank means no
 hotkey_horde_output_to_clipboard := IniRead("settings.ini", "settings", "hotkey_horde_output_to_clipboard", "")
 ;blank means no
+
+use_save_and_load_hotkeys := IniRead("settings.ini", "settings", "use_save_and_load_hotkeys", 1)
+;blank means no, but use if unspecified
 
 ;--------------------------------------------------
 ;some global things
@@ -1596,7 +1601,12 @@ controlnet_preprocessor_dropdownlist.OnEvent("Change", controlnet_preprocessor_d
 controlnet_preprocessor_dropdownlist_change(GuiCtrlObj, Info) {
   controlnet_preprocessor_hide()
   controlnet_current := controlnet_active_listview.GetCount() = 1 ? 1 : controlnet_active_listview.GetNext()
-  if (preprocessor_actual_name.Has(GuiCtrlObj.Text)) {
+  if (GuiCtrlObj.Value = 1) {
+    if (controlnet_current) {
+      controlnet_active_listview.Modify(controlnet_current, "Vis",,,,,,, "")
+    }
+  }
+  else if (preprocessor_actual_name.Has(GuiCtrlObj.Text)) {
     actual_name := preprocessor_actual_name[GuiCtrlObj.Text]
     if (preprocessor_controls.Has(actual_name)) {
       ;update the listview
@@ -1675,7 +1685,9 @@ controlnet_active_listview_itemselect(GuiCtrlObj, Item, Selected) {
     controlnet_strength_edit.Value := GuiCtrlObj.GetText(controlnet_current, 3)
     controlnet_start_edit.Value := GuiCtrlObj.GetText(controlnet_current, 4)
     controlnet_end_edit.Value := GuiCtrlObj.GetText(controlnet_current, 5)
-    controlnet_preprocessor_dropdownlist.Text := GuiCtrlObj.GetText(controlnet_current, 6)
+    try {
+      controlnet_preprocessor_dropdownlist.Text := GuiCtrlObj.GetText(controlnet_current, 6)
+    }
 
     controlnet_preprocessor_reset_values()
     ;and then load the value from the listview string
@@ -1743,6 +1755,7 @@ controlnet_remove_button_click(GuiCtrlObj, Info) {
   if (inputs.Has(controlnet_picture_frame["name"])) {
     inputs.Delete(controlnet_picture_frame["name"])
     if (preview_images.Has(controlnet_picture_frame["name"])) {
+      preview_images.Delete(controlnet_picture_frame["name"])
       controlnet_preview_picture_frame["GuiCtrlObj"].Value := "stuff\placeholder_pixel.bmp"
       picture_fit_to_frame(controlnet_preview_picture_frame["w"], controlnet_preview_picture_frame["h"], controlnet_preview_picture_frame)
     }
@@ -2234,11 +2247,11 @@ mask_picture_menu_horde_output_file(ItemName, ItemPos, MyMenu) {
 controlnet_picture.OnEvent("ContextMenu", controlnet_picture_contextmenu)
 controlnet_picture_contextmenu(GuiCtrlObj, Item, IsRightClick, X, Y) {
   inputs_existing_images_menu.Delete()
-  for (existing_images in inputs) {
-    inputs_existing_images_menu.Add(existing_images, controlnet_picture_menu_file)
+  for (existing_image in inputs) {
+    inputs_existing_images_menu.Add(existing_image, controlnet_picture_menu_file)
   }
-  for (existing_images in horde_inputs) {
-    inputs_existing_images_menu.Add(existing_images, controlnet_picture_menu_horde_file)
+  for (existing_image in horde_inputs) {
+    inputs_existing_images_menu.Add(existing_image, controlnet_picture_menu_horde_file)
   }
   outputs_existing_images_menu.Delete()
   while (A_Index <= output_listview.GetCount()) {
@@ -2651,10 +2664,10 @@ save_settings_button_click(GuiCtrlObj, Info) {
     if (!FileExist("settings.ini")) {
       FileCopy("settings.ini.example", "settings.ini")
     }
-    IniWrite(server_address, "settings.ini", "settings", "default_server_address")
-    IniWrite(horde_address, "settings.ini", "settings", "horde_default_server_address")
-    IniWrite(horde_api_key, "settings.ini", "settings", "horde_api_key")
-    IniWrite(horde_use_specific_worker, "settings.ini", "settings", "horde_use_specific_worker")
+    IniWrite(server_address_edit.Text, "settings.ini", "settings", "default_server_address")
+    IniWrite(horde_address_edit.Text, "settings.ini", "settings", "horde_default_server_address")
+    IniWrite(horde_api_key_edit.Text, "settings.ini", "settings", "horde_api_key")
+    IniWrite(horde_use_specific_worker_edit.Text, "settings.ini", "settings", "horde_use_specific_worker")
     IniWrite(horde_allow_nsfw_checkbox.Value, "settings.ini", "settings", "horde_allow_nsfw")
     IniWrite(horde_replacement_filter_checkbox.Value, "settings.ini", "settings", "horde_replacement_filter")
     IniWrite(horde_allow_untrusted_workers_checkbox.Value, "settings.ini", "settings", "horde_allow_untrusted_workers")
@@ -2798,10 +2811,10 @@ horde_checkpoint_combobox := horde_main_controls.Add("ComboBox", "x" stored_gui_
 
 ;horde sampler
 horde_checkpoint_combobox.GetPos(&stored_gui_x, &stored_gui_y, &stored_gui_w, &stored_gui_h)
-horde_sampler_dropdownlist := horde_main_controls.Add("DropDownList", "x" stored_gui_x + stored_gui_w + gap_x " y" stored_gui_y " w" A_ScreenWidth / 10 " Background" control_colour)
+horde_sampler_combobox := horde_main_controls.Add("ComboBox", "x" stored_gui_x + stored_gui_w + gap_x " y" stored_gui_y " w" A_ScreenWidth / 10 " Background" control_colour)
 
 ;horde clip skip
-horde_sampler_dropdownlist.GetPos(&stored_gui_x, &stored_gui_y, &stored_gui_w, &stored_gui_h)
+horde_sampler_combobox.GetPos(&stored_gui_x, &stored_gui_y, &stored_gui_w, &stored_gui_h)
 horde_clip_skip_edit := horde_main_controls.Add("Edit", "x" stored_gui_x + stored_gui_w + gap_x " y" stored_gui_y " w75 r1 Background" control_colour " Center Number Limit2")
 horde_clip_skip_updown := horde_main_controls.Add("UpDown", "Range0-" horde_clip_skip_values["maximum"] " 0x80", 0)
 
@@ -2880,13 +2893,13 @@ WinSetTransColor transparent_bg_colour
 horde_image_input.SetFont("s" text_size " c" text_colour " q0", text_font)
 
 ;horde controlnet
-horde_controlnet_type_dropdownlist := horde_image_input.Add("DropDownList", "x0 y" gap_y " w" A_ScreenWidth / 10 " Background" control_colour " Hidden")
+horde_controlnet_type_combobox := horde_image_input.Add("ComboBox", "x0 y" gap_y " w" A_ScreenWidth / 10 " Background" control_colour " Hidden")
 
-horde_controlnet_type_dropdownlist.GetPos(&stored_gui_x, &stored_gui_y, &stored_gui_w, &stored_gui_h)
+horde_controlnet_type_combobox.GetPos(&stored_gui_x, &stored_gui_y, &stored_gui_w, &stored_gui_h)
 horde_controlnet_option_dropdownlist := horde_image_input.Add("DropDownList", "x" stored_gui_x + stored_gui_w + 1 " y" stored_gui_y " w200 Background" control_colour " Choose1 Disabled Hidden", ["Image to ControlNet", "Image as ControlNet", "Return Control as Output"])
 
 ;source & mask pictures
-horde_controlnet_type_dropdownlist.GetPos(&stored_gui_x, &stored_gui_y, &stored_gui_w, &stored_gui_h)
+horde_controlnet_type_combobox.GetPos(&stored_gui_x, &stored_gui_y, &stored_gui_w, &stored_gui_h)
 horde_source_picture := horde_image_input.Add("Picture", "x" stored_gui_x " y" stored_gui_y + stored_gui_h + gap_y " w240 h240", "stuff\placeholder_pixel.bmp")
 
 horde_source_picture.GetPos(&stored_gui_x, &stored_gui_y, &stored_gui_w, &stored_gui_h)
@@ -3128,7 +3141,7 @@ if (show_labels) {
   horde_checkpoint_combobox.GetPos(&stored_gui_x, &stored_gui_y, &stored_gui_w, &stored_gui_h)
   horde_checkpoint_label := horde_main_controls.Add("Text", "x" stored_gui_x " y" stored_gui_y - label_h , "Checkpoint")
 
-  horde_sampler_dropdownlist.GetPos(&stored_gui_x, &stored_gui_y, &stored_gui_w, &stored_gui_h)
+  horde_sampler_combobox.GetPos(&stored_gui_x, &stored_gui_y, &stored_gui_w, &stored_gui_h)
   horde_sampler_label := horde_main_controls.Add("Text", "x" stored_gui_x " y" stored_gui_y - label_h , "Sampler")
 
   horde_clip_skip_edit.GetPos(&stored_gui_x, &stored_gui_y, &stored_gui_w, &stored_gui_h)
@@ -3161,7 +3174,7 @@ if (show_labels) {
   ;--------------------------------------------------
   horde_image_input.SetFont("s" label_size " c" label_colour " q3", label_font)
 
-  horde_controlnet_type_dropdownlist.GetPos(&stored_gui_x, &stored_gui_y, &stored_gui_w, &stored_gui_h)
+  horde_controlnet_type_combobox.GetPos(&stored_gui_x, &stored_gui_y, &stored_gui_w, &stored_gui_h)
   horde_controlnet_type_label := horde_image_input.Add("Text", "x" stored_gui_x " y" stored_gui_y - label_h " Hidden", "ControlNet")
 
   horde_source_picture.GetPos(&stored_gui_x, &stored_gui_y, &stored_gui_w, &stored_gui_h)
@@ -3342,8 +3355,8 @@ horde_denoise_edit_losefocus(GuiCtrlObj, Info) {
 ;--------------------------------------------------
 
 ;horde controlnet
-horde_controlnet_type_dropdownlist.OnEvent("Change", horde_controlnet_type_dropdownlist_change)
-horde_controlnet_type_dropdownlist_change(GuiCtrlObj, Info) {
+horde_controlnet_type_combobox.OnEvent("Change", horde_controlnet_type_combobox_change)
+horde_controlnet_type_combobox_change(GuiCtrlObj, Info) {
   if (GuiCtrlObj.Text = "" or GuiCtrlObj.Text = "None") {
     horde_controlnet_option_dropdownlist.Enabled := 0
   }
@@ -3390,20 +3403,18 @@ horde_copy_source_dimensions_button_click(GuiCtrlObj, Info) {
 ;horde post-processing list
 horde_post_process_active_listview.OnEvent("ItemSelect", horde_post_process_active_listview_itemselect)
 horde_post_process_active_listview_itemselect(GuiCtrlObj, Item, Selected) {
-  if (GuiCtrlObj.GetNext()) {
-    if (GuiCtrlObj.GetText(GuiCtrlObj.GetNext()) = "GFPGAN" or GuiCtrlObj.GetText(GuiCtrlObj.GetNext()) = "CodeFormers" ) {
-      horde_facefixer_strength_edit.Visible := 1
-      horde_facefixer_strength_updown.Visible := 1
-      if (show_labels) {
-        horde_facefixer_strength_label.Visible := 1
-      }
+  if (GuiCtrlObj.GetNext() and (GuiCtrlObj.GetText(GuiCtrlObj.GetNext()) = "GFPGAN" or GuiCtrlObj.GetText(GuiCtrlObj.GetNext()) = "CodeFormers")) {
+    horde_facefixer_strength_edit.Visible := 1
+    horde_facefixer_strength_updown.Visible := 1
+    if (show_labels) {
+      horde_facefixer_strength_label.Visible := 1
     }
-    else {
-      horde_facefixer_strength_edit.Visible := 0
-      horde_facefixer_strength_updown.Visible := 0
-      if (show_labels) {
-        horde_facefixer_strength_label.Visible := 0
-      }
+  }
+  else {
+    horde_facefixer_strength_edit.Visible := 0
+    horde_facefixer_strength_updown.Visible := 0
+    if (show_labels) {
+      horde_facefixer_strength_label.Visible := 0
     }
   }
 }
@@ -3825,7 +3836,7 @@ horde_source_picture_menu_horde_output_file(ItemName, ItemPos, MyMenu) {
 ;--------------------------------------------------
 horde_source_picture_update(on_off) {
   if (on_off) {
-    horde_controlnet_type_dropdownlist.Visible := 0
+    horde_controlnet_type_combobox.Visible := 0
     horde_controlnet_option_dropdownlist.Visible := 0
     horde_copy_source_dimensions_button.Visible := 0
     if (show_labels) {
@@ -3833,7 +3844,7 @@ horde_source_picture_update(on_off) {
     }
   }
   else {
-    horde_controlnet_type_dropdownlist.Visible := 1
+    horde_controlnet_type_combobox.Visible := 1
     horde_controlnet_option_dropdownlist.Visible := 1
     horde_copy_source_dimensions_button.Visible := 1
     if (show_labels) {
@@ -4434,9 +4445,24 @@ if (hotkey_horde_output_to_clipboard != "") {
 ^+Tab::overlay_tab_change_previous()
 #HotIf
 
-;HotIf "overlay_visible"
-;;nothing here yet
-;HotIf
+HotIf "overlay_visible"
+
+if (use_save_and_load_hotkeys) {
+  loop 12 {
+    Hotkey "F" A_Index, load_f_hotkey, "On"
+    Hotkey "+F" A_Index, save_f_hotkey, "On"
+  }
+}
+
+HotIf
+
+load_f_hotkey(f_key) {
+  load_state(SubStr(f_key, 2))
+}
+
+save_f_hotkey(f_key) {
+  save_state(SubStr(f_key, 3))
+}
 
 return
 
@@ -5973,10 +5999,10 @@ connect_to_horde(*) {
   }
 
   ;samplers
-  selected_option := horde_sampler_dropdownlist.Text
-  horde_sampler_dropdownlist.Delete()
-  horde_sampler_dropdownlist.Add(horde_scripture["definitions"]["ModelPayloadRootStable"]["properties"]["sampler_name"]["enum"])
-  horde_sampler_dropdownlist.Text := selected_option ? selected_option : horde_scripture["definitions"]["ModelPayloadRootStable"]["properties"]["sampler_name"]["default"]
+  selected_option := horde_sampler_combobox.Text
+  horde_sampler_combobox.Delete()
+  horde_sampler_combobox.Add(horde_scripture["definitions"]["ModelPayloadRootStable"]["properties"]["sampler_name"]["enum"])
+  horde_sampler_combobox.Text := selected_option ? selected_option : horde_scripture["definitions"]["ModelPayloadRootStable"]["properties"]["sampler_name"]["default"]
 
   ;clip skip
   horde_value_range(horde_clip_skip_values, horde_scripture["definitions"]["ModelPayloadRootStable"]["properties"]["clip_skip"])
@@ -6036,11 +6062,11 @@ connect_to_horde(*) {
   }
 
   ;controlnet
-  selected_option := horde_controlnet_type_dropdownlist.Text
-  horde_controlnet_type_dropdownlist.Delete()
-  horde_controlnet_type_dropdownlist.Add(["None"])
-  horde_controlnet_type_dropdownlist.Add(horde_scripture["definitions"]["ModelPayloadRootStable"]["properties"]["control_type"]["enum"])
-  horde_controlnet_type_dropdownlist.Text := selected_option ? selected_option : "None"
+  selected_option := horde_controlnet_type_combobox.Text
+  horde_controlnet_type_combobox.Delete()
+  horde_controlnet_type_combobox.Add(["None"])
+  horde_controlnet_type_combobox.Add(horde_scripture["definitions"]["ModelPayloadRootStable"]["properties"]["control_type"]["enum"])
+  horde_controlnet_type_combobox.Text := selected_option ? selected_option : "None"
 
   ;post-processing
   horde_post_process_active_listview.Delete()
@@ -6184,7 +6210,7 @@ summon_the_horde(*) {
     }
 
     horde_thought["params"] := Map()
-    horde_thought["params"]["sampler_name"] := horde_sampler_dropdownlist.Text
+    horde_thought["params"]["sampler_name"] := horde_sampler_combobox.Text
     horde_thought["params"]["cfg_scale"] := horde_cfg_edit.Value + 0
     horde_thought["params"]["denoising_strength"] := horde_denoise_edit.Value + 0
     ;if (horde_random_seed_checkbox.Value) {
@@ -6206,8 +6232,8 @@ summon_the_horde(*) {
     horde_thought["params"]["tiling"] := horde_tiling_checkbox.Value ? "true" : "false"
     horde_thought["params"]["hires_fix"] := horde_hires_fix_checkbox.Value ? "true" : "false"
     horde_thought["params"]["clip_skip"] := horde_clip_skip_edit.Value + 0
-    if (horde_inputs.Has("horde_source") and horde_controlnet_type_dropdownlist.Text and horde_controlnet_type_dropdownlist.Text != "None") {
-      horde_thought["params"]["control_type"] := horde_controlnet_type_dropdownlist.Text
+    if (horde_inputs.Has("horde_source") and horde_controlnet_type_combobox.Text and horde_controlnet_type_combobox.Text != "None") {
+      horde_thought["params"]["control_type"] := horde_controlnet_type_combobox.Text
       horde_thought["params"]["image_is_control"] := horde_controlnet_option_dropdownlist.Value = 2 ? "true" : "false"
       horde_thought["params"]["return_control_map"] := horde_controlnet_option_dropdownlist.Value = 3 ? "true" : "false"
     }
@@ -6377,6 +6403,390 @@ horde_download_image(prompt_id) {
         horde_output_listview_itemselect(horde_output_listview, "", "")
       }
     }
+  }
+  catch Error as what_went_wrong {
+    oh_no(what_went_wrong)
+  }
+}
+
+;--------------------------------------------------
+;save states
+;--------------------------------------------------
+
+save_state(slot_id) {
+  if (!DirExist(save_folder)) {
+    try {
+      DirCreate save_folder
+    }
+    catch Error as what_went_wrong {
+      oh_no(what_went_wrong)
+      return
+    }
+  }
+
+  section_name := overlay_current "_" slot_id
+  try {
+    if (overlay_current = "comfy") {
+      string_of_pairs := (
+        "batch_size=" batch_size_edit.Value
+        "`ncheckpoint=" checkpoint_combobox.Text
+        "`nvae=" vae_combobox.Text
+        "`nsampler=" sampler_combobox.Text
+        "`nscheduler=" scheduler_combobox.Text
+        "`nprompt_positive=" prompt_positive_edit.Text
+        "`nprompt_negative=" prompt_negative_edit.Text
+        "`nseed=" seed_edit.Value
+        "`nrandom_seed=" random_seed_checkbox.Value
+        "`nstep_count=" step_count_edit.Value
+        "`ncfg=" cfg_edit.Value
+        "`ndenoise=" denoise_edit.Value
+        "`nupscale=" upscale_combobox.Text
+        "`nstep_count_upscale=" step_count_upscale_edit.Value
+        "`ncfg_upscale=" cfg_upscale_edit.Value
+        "`ndenoise_upscale=" denoise_upscale_edit.Value
+        "`nupscale_value=" upscale_value_edit.Value
+        "`nrandom_seed_upscale=" random_seed_upscale_checkbox.Value
+        "`nrefiner=" refiner_combobox.Text
+        "`nrefiner_start_step=" refiner_start_step_edit.Value
+        "`ncfg_refiner=" cfg_refiner_edit.Value
+        "`nrandom_seed_refiner=" random_seed_refiner_checkbox.Value
+        "`nrefiner_conditioning=" refiner_conditioning_checkbox.Value
+      )
+
+      string_of_pairs .= (
+        "`nsource_image=" (inputs.Has("source") ? "source" : "")
+        "`nimage_width=" image_width_edit.Value
+        "`nimage_height=" image_height_edit.Value
+      )
+
+      string_of_pairs .= (
+        "`nclip_vision=" clip_vision_combobox.Text
+        "`nIPAdapter=" IPAdapter_combobox.Text
+      )
+
+      while (A_Index <= image_prompt_active_listview.GetCount()) {
+        string_of_pairs .= (
+        "`nimage_prompt_" A_Index "_image=" image_prompt_active_listview.GetText(A_Index, 1)
+        "`nimage_prompt_" A_Index "_strength=" image_prompt_active_listview.GetText(A_Index, 2)
+        "`nimage_prompt_" A_Index "_noise=" image_prompt_active_listview.GetText(A_Index, 3)
+        )
+      }
+
+      while (A_Index <= lora_active_listview.GetCount()) {
+        string_of_pairs .= (
+        "`nlora_" A_Index "_name=" lora_active_listview.GetText(A_Index, 1)
+        "`nlora_" A_Index "_strength=" lora_active_listview.GetText(A_Index, 2)
+        )
+      }
+
+      string_of_pairs .= (
+        "`nmask_image=" (inputs.Has("mask") ? "mask" : "")
+        "`nmask_pixels=" mask_pixels_combobox.Text
+        "`nmask_grow=" mask_grow_edit.Value
+        "`nmask_feather=" mask_feather_edit.Value
+        "`ninpainting_checkpoint=" inpainting_checkpoint_checkbox.Value
+      )
+
+      while (A_Index <= controlnet_active_listview.GetCount()) {
+        string_of_pairs .= (
+        "`ncontrolnet_" A_Index "_image=" controlnet_active_listview.GetText(A_Index, 1)
+        "`ncontrolnet_" A_Index "_checkpoint=" controlnet_active_listview.GetText(A_Index, 2)
+        "`ncontrolnet_" A_Index "_strength=" controlnet_active_listview.GetText(A_Index, 3)
+        "`ncontrolnet_" A_Index "_start=" controlnet_active_listview.GetText(A_Index, 4)
+        "`ncontrolnet_" A_Index "_end=" controlnet_active_listview.GetText(A_Index, 5)
+        "`ncontrolnet_" A_Index "_preprocessor=" controlnet_active_listview.GetText(A_Index, 6)
+        "`ncontrolnet_" A_Index "_preprocessor_options=" controlnet_active_listview.GetText(A_Index, 7)
+        )
+      }
+
+      IniWrite(string_of_pairs, save_folder "save.ini" , section_name)
+
+      FileDelete(save_folder section_name "_*.*")
+      for (existing_image, image_file in inputs) {
+        SplitPath image_file, &original_file_name
+        FileCopy(image_file, save_folder section_name "_" original_file_name, 1)
+        IniWrite(section_name "_" original_file_name, save_folder "save.ini" , section_name, "inputs_" existing_image)
+      }
+    }
+    else if (overlay_current = "horde") {
+      string_of_pairs := (
+        "horde_batch_size=" horde_batch_size_edit.Value
+        "`nhorde_checkpoint=" horde_checkpoint_combobox.Text
+        "`nhorde_sampler=" horde_sampler_combobox.Text
+        "`nhorde_clip_skip=" horde_clip_skip_edit.Value
+        "`nhorde_karras=" horde_karras_checkbox.Value
+        "`nhorde_hires_fix=" horde_hires_fix_checkbox.Value
+        "`nhorde_tiling=" horde_tiling_checkbox.Value
+        "`nhorde_prompt_positive=" horde_prompt_positive_edit.Text
+        "`nhorde_prompt_negative=" horde_prompt_negative_edit.Text
+        "`nhorde_seed=" horde_seed_edit.Text
+        "`nhorde_random_seed=" horde_random_seed_checkbox.Value
+        "`nhorde_seed_variation=" horde_seed_variation_edit.Value
+        "`nhorde_step_count=" horde_step_count_edit.Value
+        "`nhorde_cfg=" horde_cfg_edit.Value
+        "`nhorde_denoise=" horde_denoise_edit.Value
+      )
+
+      string_of_pairs .= (
+        "`nhorde_controlnet_type=" horde_controlnet_type_combobox.Text
+        "`nhorde_controlnet_option=" horde_controlnet_option_dropdownlist.Value
+        "`nhorde_source_image=" (horde_inputs.Has("horde_source") ? "horde_source" : "")
+        "`nhorde_mask_image=" (horde_inputs.Has("horde_mask") ? "horde_mask" : "")
+        "`nhorde_image_width=" horde_image_width_edit.Value
+        "`nhorde_image_height=" horde_image_height_edit.Value
+      )
+
+      if (next_post := horde_post_process_active_listview.GetNext(0, "C")) {
+        string_of_pairs .= "`nhorde_post_processing_1=" horde_post_process_active_listview.GetText(next_post, 1)
+        while (next_post := horde_post_process_active_listview.GetNext(next_post, "C")) {
+          string_of_pairs .= "`nhorde_post_processing_" A_Index + 1 "=" horde_post_process_active_listview.GetText(next_post, 1)
+        }
+      }
+      else {
+        string_of_pairs .= "`nhorde_post_processing_1="
+      }
+
+      string_of_pairs .= "`nhorde_facefixer_strength=" horde_facefixer_strength_edit.Value
+
+      while (A_Index <= horde_lora_active_listview.GetCount()) {
+        string_of_pairs .= (
+        "`nhorde_lora_" A_Index "_name=" horde_lora_active_listview.GetText(A_Index, 1)
+        "`nhorde_lora_" A_Index "_strength=" horde_lora_active_listview.GetText(A_Index, 2)
+        "`nhorde_lora_" A_Index "_inject_trigger=" horde_lora_active_listview.GetText(A_Index, 3)
+        )
+      }
+
+      while (A_Index <= horde_textual_inversion_active_listview.GetCount()) {
+        string_of_pairs .= (
+        "`nhorde_textual_inversion_" A_Index "_name=" horde_textual_inversion_active_listview.GetText(A_Index, 1)
+        "`nhorde_textual_inversion_" A_Index "_inject_field=" horde_textual_inversion_active_listview.GetText(A_Index, 2)
+        "`nhorde_textual_inversion_" A_Index "_strength=" horde_textual_inversion_active_listview.GetText(A_Index, 3)
+        )
+      }
+
+      IniWrite(string_of_pairs, save_folder "save.ini" , section_name)
+
+      FileDelete(save_folder section_name "_*.*")
+      for (existing_image, image_file in horde_inputs) {
+        SplitPath image_file, &original_file_name
+        FileCopy(image_file, save_folder section_name "_" original_file_name, 1)
+        IniWrite(section_name "_" original_file_name, save_folder "save.ini" , section_name, "horde_inputs_" existing_image)
+      }
+    }
+    status_text.Text := "Saved`n" section_name
+  }
+  catch Error as what_went_wrong {
+    oh_no(what_went_wrong)
+  }
+}
+
+load_state(slot_id) {
+  section_name := overlay_current "_" slot_id
+  try {
+    if (overlay_current = "comfy" and assistant_status = "idle") {
+      batch_size_edit.Value := IniRead(save_folder "save.ini", section_name, "batch_size", batch_size_edit.Value)
+      checkpoint_combobox.Text := IniRead(save_folder "save.ini", section_name, "checkpoint", checkpoint_combobox.Text)
+      vae_combobox.Text := IniRead(save_folder "save.ini", section_name, "vae", vae_combobox.Text)
+      sampler_combobox.Text := IniRead(save_folder "save.ini", section_name, "sampler", sampler_combobox.Text)
+      scheduler_combobox.Text := IniRead(save_folder "save.ini", section_name, "scheduler", scheduler_combobox.Text)
+      prompt_positive_edit.Text := IniRead(save_folder "save.ini", section_name, "prompt_positive", prompt_positive_edit.Text)
+      prompt_negative_edit.Text := IniRead(save_folder "save.ini", section_name, "prompt_negative", prompt_negative_edit.Text)
+      seed_edit.Value := IniRead(save_folder "save.ini", section_name, "seed", seed_edit.Value)
+      random_seed_checkbox.Value := IniRead(save_folder "save.ini", section_name, "random_seed", random_seed_checkbox.Value)
+      random_seed_checkbox_click(random_seed_checkbox, "")
+      step_count_edit.Value := IniRead(save_folder "save.ini", section_name, "step_count", step_count_edit.Value)
+      cfg_edit.Value := IniRead(save_folder "save.ini", section_name, "cfg", cfg_edit.Value)
+      denoise_edit.Value := IniRead(save_folder "save.ini", section_name, "denoise", denoise_edit.Value)
+      upscale_combobox.Text := IniRead(save_folder "save.ini", section_name, "upscale", upscale_combobox.Text)
+      upscale_combobox_change(upscale_combobox, "")
+      step_count_upscale_edit.Value := IniRead(save_folder "save.ini", section_name, "step_count_upscale", step_count_upscale_edit.Value)
+      cfg_upscale_edit.Value := IniRead(save_folder "save.ini", section_name, "cfg_upscale", cfg_upscale_edit.Value)
+      denoise_upscale_edit.Value := IniRead(save_folder "save.ini", section_name, "denoise_upscale", denoise_upscale_edit.Value)
+      upscale_value_edit.Value := IniRead(save_folder "save.ini", section_name, "upscale_value", upscale_value_edit.Value)
+      random_seed_upscale_checkbox.Value := IniRead(save_folder "save.ini", section_name, "random_seed_upscale", random_seed_upscale_checkbox.Value)
+      refiner_combobox.Text := IniRead(save_folder "save.ini", section_name, "refiner", refiner_combobox.Text)
+      refiner_combobox_change(refiner_combobox, "")
+      refiner_start_step_edit.Value := IniRead(save_folder "save.ini", section_name, "refiner_start_step", refiner_start_step_edit.Value)
+      cfg_refiner_edit.Value := IniRead(save_folder "save.ini", section_name, "cfg_refiner", cfg_refiner_edit.Value)
+      random_seed_refiner_checkbox.Value := IniRead(save_folder "save.ini", section_name, "random_seed_refiner", random_seed_refiner_checkbox.Value)
+      refiner_conditioning_checkbox.Value := IniRead(save_folder "save.ini", section_name, "refiner_conditioning", refiner_conditioning_checkbox.Value)
+
+      if(IniRead(save_folder "save.ini", section_name, "source_image", "option_not_found") != "option_not_found") {
+        main_preview_picture_menu_remove("", "", "")
+        if (inputs.Has("source")) {
+          inputs.Delete("source")
+        }
+        if (source_input_file_to_load := IniRead(save_folder "save.ini", section_name, "inputs_source", "")) {
+          if (valid_file := image_load_and_fit(save_folder source_input_file_to_load, main_preview_picture_frame)) {
+            inputs["source"] := valid_file
+            main_preview_picture_update(0)
+          }
+        }
+        else {
+          image_width_edit.Value := IniRead(save_folder "save.ini", section_name, "image_width", image_width_edit.Value)
+          image_height_edit.Value := IniRead(save_folder "save.ini", section_name, "image_height", image_height_edit.Value)
+          image_width_edit_losefocus(image_width_edit, "")
+          image_height_edit_losefocus(image_height_edit, "")
+        }
+      }
+
+      clip_vision_combobox.Text := IniRead(save_folder "save.ini", section_name, "clip_vision", clip_vision_combobox.Text)
+      IPAdapter_combobox.Text := IniRead(save_folder "save.ini", section_name, "IPAdapter", IPAdapter_combobox.Text)
+
+      ;this just checks for the first row in the saved listview
+      ;"option_not_found" means that there's no value in the save file
+      ;as opposed to the value existing, but being empty
+      if (IniRead(save_folder "save.ini", section_name, "image_prompt_1_image", "option_not_found") != "option_not_found") {
+        while (A_Index <= image_prompt_active_listview.GetCount()) {
+          if (inputs.Has(image_prompt_image_to_clear := image_prompt_active_listview.GetText(A_Index, 1))) {
+            inputs.Delete(image_prompt_image_to_clear)
+          }
+        }
+        image_prompt_active_listview.Delete()
+        while ((image_prompt_image := IniRead(save_folder "save.ini", section_name, "image_prompt_" A_Index "_image", "option_not_found")) != "option_not_found") {
+          image_prompt_active_listview.Add(, image_prompt_image, IniRead(save_folder "save.ini", section_name, "image_prompt_" A_Index "_strength", ""), IniRead(save_folder "save.ini", section_name, "image_prompt_" A_Index "_noise", ""))
+          if (image_prompt_input_file_to_load := IniRead(save_folder "save.ini", section_name, "inputs_" image_prompt_image, "")) {
+            SplitPath image_prompt_input_file_to_load,,, &original_file_extension
+            FileCopy(save_folder image_prompt_input_file_to_load, input_folder image_prompt_image "." original_file_extension, 1)
+            inputs[image_prompt_image] := input_folder image_prompt_image "." original_file_extension
+          }
+        }
+        image_prompt_active_listview.Modify(1 ,"Select Vis")
+        image_prompt_active_listview_itemselect(image_prompt_active_listview, "", "")
+      }
+
+      if (IniRead(save_folder "save.ini", section_name, "lora_1_name", "option_not_found") != "option_not_found") {
+        lora_active_listview.Delete()
+        while ((lora_name := IniRead(save_folder "save.ini", section_name, "lora_" A_Index "_name", "option_not_found")) != "option_not_found") {
+          lora_active_listview.Add(, lora_name, IniRead(save_folder "save.ini", section_name, "lora_" A_Index "_strength", ""))
+        }
+        lora_active_listview.Modify(1 ,"Select Vis")
+        lora_active_listview_itemselect(lora_active_listview, "", "")
+      }
+
+      mask_pixels_combobox.Text := IniRead(save_folder "save.ini", section_name, "mask_pixels", mask_pixels_combobox.Text)
+      mask_grow_edit.Value := IniRead(save_folder "save.ini", section_name, "mask_grow", mask_grow_edit.Value)
+      mask_feather_edit.Value := IniRead(save_folder "save.ini", section_name, "mask_feather", mask_feather_edit.Value)
+      inpainting_checkpoint_checkbox.Value := IniRead(save_folder "save.ini", section_name, "inpainting_checkpoint", inpainting_checkpoint_checkbox.Value)
+
+      if(IniRead(save_folder "save.ini", section_name, "mask_image", "option_not_found") != "option_not_found") {
+        mask_picture_menu_remove("", "", "")
+        if (mask_input_file_to_load := IniRead(save_folder "save.ini", section_name, "inputs_mask", "")) {
+          if (inputs.Has("mask")) {
+            inputs.Delete("mask")
+          }
+          if (valid_file := image_load_and_fit(save_folder mask_input_file_to_load, mask_picture_frame)) {
+            inputs["mask"] := valid_file
+          }
+        }
+      }
+
+      if (IniRead(save_folder "save.ini", section_name, "controlnet_1_image", "option_not_found") != "option_not_found") {
+        while (A_Index <= controlnet_active_listview.GetCount()) {
+          if (inputs.Has(controlnet_image_to_clear := controlnet_active_listview.GetText(A_Index, 1))) {
+            inputs.Delete(controlnet_image_to_clear)
+            if (preview_images.Has(controlnet_image_to_clear)) {
+              preview_images.Delete(controlnet_image_to_clear)
+            }
+          }
+        }
+        controlnet_active_listview.Delete()
+        while ((controlnet_image := IniRead(save_folder "save.ini", section_name, "controlnet_" A_Index "_image", "option_not_found")) != "option_not_found") {
+          controlnet_active_listview.Add(, controlnet_image, IniRead(save_folder "save.ini", section_name, "controlnet_" A_Index "_checkpoint", ""), IniRead(save_folder "save.ini", section_name, "controlnet_" A_Index "_strength", ""), IniRead(save_folder "save.ini", section_name, "controlnet_" A_Index "_start", ""), IniRead(save_folder "save.ini", section_name, "controlnet_" A_Index "_end", ""), IniRead(save_folder "save.ini", section_name, "controlnet_" A_Index "_preprocessor", ""), IniRead(save_folder "save.ini", section_name, "controlnet_" A_Index "_preprocessor_options", ""))
+          if (controlnet_input_file_to_load := IniRead(save_folder "save.ini", section_name, "inputs_" controlnet_image, "")) {
+            SplitPath controlnet_input_file_to_load,,, &original_file_extension
+            FileCopy(save_folder controlnet_input_file_to_load, input_folder controlnet_image "." original_file_extension, 1)
+            inputs[controlnet_image] := input_folder controlnet_image "." original_file_extension
+          }
+        }
+        controlnet_active_listview.Modify(1 ,"Select Vis")
+        controlnet_active_listview_itemselect(controlnet_active_listview, "", "")
+      }
+
+    }
+    else if (overlay_current = "horde") {
+      horde_batch_size_edit.Value := IniRead(save_folder "save.ini", section_name, "horde_batch_size", horde_batch_size_edit.Value)
+      horde_checkpoint_combobox.Text := IniRead(save_folder "save.ini", section_name, "horde_checkpoint", horde_checkpoint_combobox.Text)
+      horde_sampler_combobox.Text := IniRead(save_folder "save.ini", section_name, "horde_sampler", horde_sampler_combobox.Text)
+      horde_clip_skip_edit.Value := IniRead(save_folder "save.ini", section_name, "horde_clip_skip", horde_clip_skip_edit.Value)
+      horde_karras_checkbox.Value := IniRead(save_folder "save.ini", section_name, "horde_karras", horde_karras_checkbox.Value)
+      horde_hires_fix_checkbox.Value := IniRead(save_folder "save.ini", section_name, "horde_hires_fix", horde_hires_fix_checkbox.Value)
+      horde_tiling_checkbox.Value := IniRead(save_folder "save.ini", section_name, "horde_tiling", horde_tiling_checkbox.Value)
+      horde_prompt_positive_edit.Text := IniRead(save_folder "save.ini", section_name, "horde_prompt_positive", horde_prompt_positive_edit.Text)
+      horde_prompt_negative_edit.Text := IniRead(save_folder "save.ini", section_name, "horde_prompt_negative", horde_prompt_negative_edit.Text)
+      horde_seed_edit.Text := IniRead(save_folder "save.ini", section_name, "horde_seed", horde_seed_edit.Text)
+      horde_random_seed_checkbox.Value := IniRead(save_folder "save.ini", section_name, "horde_random_seed", horde_random_seed_checkbox.Value)
+      horde_random_seed_checkbox_click(horde_random_seed_checkbox, "")
+      horde_seed_variation_edit.Value := IniRead(save_folder "save.ini", section_name, "horde_seed_variation", horde_seed_variation_edit.Value)
+      horde_step_count_edit.Value := IniRead(save_folder "save.ini", section_name, "horde_step_count", horde_step_count_edit.Value)
+      horde_cfg_edit.Value := IniRead(save_folder "save.ini", section_name, "horde_cfg", horde_cfg_edit.Value)
+      horde_denoise_edit.Value := IniRead(save_folder "save.ini", section_name, "horde_denoise", horde_denoise_edit.Value)
+
+      horde_controlnet_type_combobox.Text := IniRead(save_folder "save.ini", section_name, "horde_controlnet_type", horde_controlnet_type_combobox.Text)
+      horde_controlnet_option_dropdownlist.Value := IniRead(save_folder "save.ini", section_name, "horde_controlnet_option", horde_controlnet_option_dropdownlist.Value)
+
+      if(IniRead(save_folder "save.ini", section_name, "horde_source_image", "option_not_found") != "option_not_found") {
+        horde_source_picture_menu_remove("", "", "")
+        if (horde_inputs.Has("horde_source")) {
+          horde_inputs.Delete("horde_source")
+        }
+        if (horde_source_input_file_to_load := IniRead(save_folder "save.ini", section_name, "horde_inputs_horde_source", "")) {
+          if (valid_file := image_load_and_fit(save_folder horde_source_input_file_to_load, horde_source_picture_frame)) {
+            horde_inputs["horde_source"] := valid_file
+            horde_source_picture_update(0)
+          }
+        }
+      }
+
+      if(IniRead(save_folder "save.ini", section_name, "horde_mask_image", "option_not_found") != "option_not_found") {
+        horde_mask_picture_menu_remove("", "", "")
+        if (horde_inputs.Has("horde_mask")) {
+          horde_inputs.Delete("horde_mask")
+        }
+        if (horde_mask_input_file_to_load := IniRead(save_folder "save.ini", section_name, "horde_inputs_horde_mask", "")) {
+          if (valid_file := image_load_and_fit(save_folder horde_mask_input_file_to_load, horde_mask_picture_frame)) {
+            horde_inputs["horde_mask"] := valid_file
+          }
+        }
+      }
+
+      horde_image_width_edit.Value := IniRead(save_folder "save.ini", section_name, "horde_image_width", horde_image_width_edit.Value)
+      horde_image_height_edit.Value := IniRead(save_folder "save.ini", section_name, "horde_image_height", horde_image_height_edit.Value)
+
+      if(IniRead(save_folder "save.ini", section_name, "horde_post_processing_1", "option_not_found") != "option_not_found") {
+        while (A_Index <= horde_post_process_active_listview.GetCount()) {
+          horde_post_process_active_listview.Modify(A_Index, "-Check")
+        }
+        while (horde_post_processing_name := IniRead(save_folder "save.ini", section_name, "horde_post_processing_" A_Index, "")) {
+          if (existing_horde_post_processing_entry := listview_search(horde_post_process_active_listview, horde_post_processing_name)) {
+            horde_post_process_active_listview.Delete(existing_horde_post_processing_entry)
+          }
+          horde_post_process_active_listview.Insert(A_Index, "Check", horde_post_processing_name)
+        }
+        horde_post_process_active_listview_itemselect(horde_post_process_active_listview, "", "")
+      }
+
+      horde_facefixer_strength_edit.Value := IniRead(save_folder "save.ini", section_name, "horde_facefixer_strength", horde_facefixer_strength_edit.Value)
+
+      if (IniRead(save_folder "save.ini", section_name, "horde_lora_1_name", "option_not_found") != "option_not_found") {
+        horde_lora_active_listview.Delete()
+        while ((horde_lora_name := IniRead(save_folder "save.ini", section_name, "horde_lora_" A_Index "_name", "option_not_found")) != "option_not_found") {
+          horde_lora_active_listview.Add(, horde_lora_name, IniRead(save_folder "save.ini", section_name, "horde_lora_" A_Index "_strength", ""), IniRead(save_folder "save.ini", section_name, "horde_lora_" A_Index "_inject_trigger"))
+        }
+        horde_lora_active_listview.Modify(1 ,"Select Vis")
+        horde_lora_active_listview_itemselect(horde_lora_active_listview, "", "")
+      }
+
+      if (IniRead(save_folder "save.ini", section_name, "horde_textual_inversion_1_name", "option_not_found") != "option_not_found") {
+        horde_textual_inversion_active_listview.Delete()
+        while ((horde_textual_inversion_name := IniRead(save_folder "save.ini", section_name, "horde_textual_inversion_" A_Index "_name", "option_not_found")) != "option_not_found") {
+          horde_textual_inversion_active_listview.Add(, horde_textual_inversion_name, IniRead(save_folder "save.ini", section_name, "horde_textual_inversion_" A_Index "_inject_field", ""), IniRead(save_folder "save.ini", section_name, "horde_textual_inversion_" A_Index "_strength"))
+        }
+        horde_textual_inversion_active_listview.Modify(1 ,"Select Vis")
+        horde_textual_inversion_active_listview_itemselect(horde_textual_inversion_active_listview, "", "")
+      }
+    }
+    status_text.Text := "Loaded`n" section_name
   }
   catch Error as what_went_wrong {
     oh_no(what_went_wrong)
