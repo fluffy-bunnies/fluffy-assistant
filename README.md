@@ -44,5 +44,5 @@ fluffy-assistant is an interface for ComfyUI created to assist with image genera
 <li>For the Horde, sharing generations with LAION is turned on by default. This can be turned off, but leaving it on benefits the quality of future AI and society will love you for it.</li>
 <li>For the Horde, NSFW results are turned off by default. This can be changed in the settings to disable all censorship with <a href="https://github.com/Haidra-Org/AI-Horde/blob/main/FAQ.md#do-you-censor-generations">one exception</a>. The "Replacement Filter" option is intended to prevent users from ending up in the naughty corner unintentionally because of this.</li>
 <br>
-<li>The little assistant character can be replaced with any other .png file. Replace the assistant.png file with a different one with the same name to do so.</li>
+<li>The little assistant character can be changed by replacing assistant.png with another file using the same name.</li>
 </ul>
