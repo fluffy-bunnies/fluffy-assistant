@@ -6356,13 +6356,14 @@ summon_the_horde(*) {
           }
           horde_generation_status_listview.Add(,horde_vision["id"],,,,,,,,,,, "Request Received")
           ;remove image files in order to save history
-          if (horde_thought.Has("source_image")) {
-            horde_thought["source_image"] := "redacted for brevity"
-            if (horde_thought.Has("source_mask")) {
-              horde_thought["source_mask"] := "redacted for brevity"
+          horde_thought_for_history :=  horde_thought.Clone()
+          if (horde_thought_for_history.Has("source_image")) {
+            horde_thought_for_history["source_image"] := "redacted for brevity"
+            if (horde_thought_for_history.Has("source_mask")) {
+              horde_thought_for_history["source_mask"] := "redacted for brevity"
             }
           }
-          IniWrite(Jxon_dump(horde_thought), horde_output_folder "history.ini", horde_vision["id"], "Request")
+          IniWrite(Jxon_dump(horde_thought_for_history), horde_output_folder "history.ini", horde_vision["id"], "Request")
         }
         catch Error as what_went_wrong {
           oh_no(what_went_wrong)
