@@ -6573,7 +6573,7 @@ save_state(slot_id) {
         IniWrite(section_name "_" original_file_name, save_folder "save.ini" , section_name, "horde_inputs_" existing_image)
       }
     }
-    status_text.Text := "Saved`n" section_name
+    status_text.Text := FormatTime() "`nSaved`n" section_name
   }
   catch Error as what_went_wrong {
     oh_no(what_went_wrong)
@@ -6786,7 +6786,7 @@ load_state(slot_id) {
         horde_textual_inversion_active_listview_itemselect(horde_textual_inversion_active_listview, "", "")
       }
     }
-    status_text.Text := "Loaded`n" section_name
+    status_text.Text := FormatTime() "`nLoaded`n" section_name
   }
   catch Error as what_went_wrong {
     oh_no(what_went_wrong)
