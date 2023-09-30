@@ -5021,7 +5021,7 @@ create_a_number_box(x, y, node, opt, v_default, v_min, v_max, v_step) {
 
   control_edit_losefocus(GuiCtrlObj, Info) {
     controlnet_current := controlnet_active_listview.GetCount() = 1 ? 1 : controlnet_active_listview.GetNext()
-    if (controlnet_current and controlnet_active_listview.GetText(controlnet_current, 6) = node) {
+    if (controlnet_current and preprocessor_actual_name[controlnet_active_listview.GetText(controlnet_current, 6)] = node) {
       ;get values from listview's controlnet preprocessor column
       last_value := effective_default
       Loop Parse controlnet_active_listview.GetText(controlnet_current, 7), "," {
