@@ -5257,6 +5257,7 @@ diffusion_time(*) {
       }
     }
   }
+  ;thought["main_vae_decode"]["inputs"]["samples"] := ["main_sampler", 0]
 
   ;upscale
   if (upscale_combobox.Text and upscale_combobox.Text != "None") {
@@ -5310,6 +5311,7 @@ diffusion_time(*) {
     thought["upscale_sampler"]["inputs"]["cfg"] := cfg_upscale_edit.Value
     thought["upscale_sampler"]["inputs"]["denoise"] := denoise_upscale_edit.Value
 
+    ;thought["upscale_vae_decode"]["inputs"]["samples"] := ["upscale_sampler", 0]
     thought["save_image"]["inputs"]["images"] := ["upscale_vae_decode", 0]
   }
   else {
@@ -5713,6 +5715,37 @@ diffusion_time(*) {
       thought["refiner_controlnet_apply_1"]["inputs"]["negative"] := prompt_negative_edit.Text = "00" ? ["refiner_prompt_negative_zero_out", 0] : ["refiner_prompt_negative", 0]
       thought["refiner_sampler"]["inputs"]["positive"] := ["refiner_controlnet_apply_" actual_controlnet_count, 0]
       thought["refiner_sampler"]["inputs"]["negative"] := ["refiner_controlnet_apply_" actual_controlnet_count, 1]
+    }
+  }
+
+  ;adjust noodles if upscaling without sampling
+  if (step_count_edit.Value = 0) {
+    ;bypass the main sampling node
+    thought["main_vae_decode"]["inputs"]["samples"] := thought["main_sampler"]["inputs"]["latent_image"]
+    ;further bypass vae encode/decode if using a source image
+    ;generally, this should only *not* happen if the user wishes to upscale an empty latent
+    if (inputs.Has("source")) {
+      source_image_exit_node := batch_size_edit.Value > 1 ? ["source_image_batcher_" image_batcher_node_count, 0] : ["source_image_loader", 0]
+      if (upscale_combobox.Text and upscale_combobox.Text != "None") {
+        if (upscale_using_model) {
+          thought["upscale_with_model"]["inputs"]["image"] := source_image_exit_node
+        }
+        else {
+          thought["upscale_resize"]["inputs"]["image"] := source_image_exit_node
+        }
+      }
+      else {
+        ;no main sampler and no upscale means the source image goes straight to output
+        thought["save_image"]["inputs"]["images"] := source_image_exit_node
+      }
+    }
+  }
+  ;for upscaling and then not sampling,
+  ;send the image directly to the saving node
+  if (step_count_upscale_edit.Value = 0) {
+    ;bypass the upscale sampler node, along with the corresponding vae encode/decode nodes
+    if (upscale_combobox.Text and upscale_combobox.Text != "None") {
+      thought["save_image"]["inputs"]["images"] := ["upscale_resize", 0]
     }
   }
 
