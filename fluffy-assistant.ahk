@@ -5743,7 +5743,6 @@ diffusion_time(*) {
   ;for upscaling and then not sampling,
   ;send the image directly to the saving node
   if (step_count_upscale_edit.Value = 0) {
-    ;bypass the upscale sampler node, along with the corresponding vae encode/decode nodes
     if (upscale_combobox.Text and upscale_combobox.Text != "None") {
       thought["save_image"]["inputs"]["images"] := ["upscale_resize", 0]
     }
