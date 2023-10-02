@@ -6430,7 +6430,6 @@ horde_download_image(prompt_id) {
     altar.Open("GET", "https://" horde_address "/api/v2/generate/status/" prompt_id, false)
     altar.Send()
     response := altar.ResponseText
-    FileAppend("[" A_Now "]`n" response "`n", "seed_log", "utf-8")
     status_text.Text := FormatTime() "`nhttps://" horde_address "/api/v2/generate/status/`n" prompt_id "`n" altar.Status ": " altar.StatusText
     history := Jxon_load(&response)
     if (history.Has("generations")) {
