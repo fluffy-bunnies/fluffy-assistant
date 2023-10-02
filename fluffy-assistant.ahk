@@ -3294,11 +3294,7 @@ horde_clip_skip_edit_losefocus(GuiCtrlObj, Info) {
 ;horde seed
 horde_seed_updown.OnEvent("Change", horde_seed_updown_change)
 horde_seed_updown_change(GuiCtrlObj, Info) {
-  ;because strings are okay, no sanitation is performed here
-  ;still using a special updown to allow for larger range
-  if (IsInteger(horde_seed_edit.Value)) {
-    horde_seed_edit.Value := Info ? horde_seed_edit.Value + 1 : horde_seed_edit.Value - 1
-  }
+  number_update(0, 0, 4294967295, 1, 0, horde_seed_edit, Info)
 }
 
 ;horde random seed
@@ -6350,18 +6346,26 @@ summon_the_horde(*) {
 
     ;sidestep issues with seed variation and n
     ;using a loop to send batches of 1
+    if (IsInteger(horde_seed_edit.Text) and horde_seed_edit.Text >= 0 and horde_seed_edit.Text + horde_batch_size_edit.Value - 1 <= 4294967295) {
+      seed_treatment := "int"
+    }
+    else {
+      seed_treatment := "str"
+    }
     loop horde_batch_size_edit.Value {
       if (horde_random_seed_checkbox.Value) {
-        horde_seed_edit.Text := horde_thought["params"]["seed"] := Random(0x7FFFFFFFFFFFFFFF) ""
+        horde_seed_edit.Text := horde_thought["params"]["seed"] := Random(4294967295) ""
       }
       else {
-        horde_thought["params"]["seed"] := horde_seed_edit.Text ""
-        if (A_Index > 1) {
-          if (IsNumber(horde_thought["params"]["seed"]) and horde_thought["params"]["seed"] < 0x7FFFFFFF) {
-            horde_thought["params"]["seed"] := horde_thought["params"]["seed"] + A_Index - 1 . ""
+        if (A_Index = 1) {
+          base_seed := horde_thought["params"]["seed"] := horde_seed_edit.Text
+        }
+        else {
+          if (seed_treatment = "int") {
+            horde_thought["params"]["seed"] := base_seed + A_Index - 1 . ""
           }
-          else {
-            horde_thought["params"]["seed"] .= " " A_Index - 1
+          else if (seed_treatment = "str") {
+            horde_thought["params"]["seed"] := base_seed " " A_Index - 1
           }
         }
       }
@@ -6426,6 +6430,7 @@ horde_download_image(prompt_id) {
     altar.Open("GET", "https://" horde_address "/api/v2/generate/status/" prompt_id, false)
     altar.Send()
     response := altar.ResponseText
+    FileAppend("[" A_Now "]`n" response "`n", "seed_log", "utf-8")
     status_text.Text := FormatTime() "`nhttps://" horde_address "/api/v2/generate/status/`n" prompt_id "`n" altar.Status ": " altar.StatusText
     history := Jxon_load(&response)
     if (history.Has("generations")) {
