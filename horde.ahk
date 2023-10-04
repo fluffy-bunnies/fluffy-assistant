@@ -39,13 +39,7 @@ while (job_queue.Count) {
       shrine.Open("GET", "https://" job_details["server_address"] "/api/v2/generate/check/" prompt_id, false)
       shrine.Send()
       grace := shrine.ResponseText
-      if (!shrine.Status = 200) {
-        FileAppend("[" A_Now "]`nhttps://" job_details["server_address"] "/api/v2/generate/check/" prompt_id "`n" shrine.Status ": " shrine.StatusText "`n" grace "`n", "log", "utf-8")
-        send_something_forward("something went wrong", job_details["script"] " ahk_class AutoHotkey")
-        job_queue.Delete(prompt_id)
-        continue
-      }
-      else {
+      if (shrine.Status = 200) {
         ;make a json to send as a status update
         send_something_forward('horde_progress{"prompt_id": "' prompt_id '", "actual_server_response": ' grace ' }', job_details["script"] " ahk_class AutoHotkey")
 
@@ -54,6 +48,16 @@ while (job_queue.Count) {
           send_something_forward(job_details["job_type"] prompt_id, job_details["script"] " ahk_class AutoHotkey")
           job_queue.Delete(prompt_id)
         }
+      }
+      else {
+        FileAppend("[" A_Now "]`nhttps://" job_details["server_address"] "/api/v2/generate/check/" prompt_id "`n" shrine.Status ": " shrine.StatusText "`n" grace "`n", "log", "utf-8")
+        if (shrine.Status = 404) {
+          send_something_forward('prompt_id_not_found' prompt_id , job_details["script"] " ahk_class AutoHotkey")
+        }
+        else {
+          send_something_forward("something went wrong", job_details["script"] " ahk_class AutoHotkey")
+        }
+        job_queue.Delete(prompt_id)
       }
     }
     catch Error as what_went_wrong {
@@ -91,7 +95,6 @@ message_receive(wParam, lParam, msg, hwnd) {
   try {
     out_ptr := NumGet(lParam, A_PtrSize * 2, "Ptr")
     possible_string := StrGet(out_ptr)
-    ;job_queue.Push(Jxon_load(&possible_string))
     new_job := Jxon_load(&possible_string)
     job_queue[new_job[4]] := Map(
       "script", new_job[1]

@@ -2614,7 +2614,7 @@ connect_menu(ItemName, ItemPos, MyMenu) {
   if (server_address != "") {
     connect_to_server()
   }
-  else if (horde_address != "") {
+  if (horde_address != "") {
     connect_to_horde()
   }
 }
@@ -3294,11 +3294,7 @@ horde_clip_skip_edit_losefocus(GuiCtrlObj, Info) {
 ;horde seed
 horde_seed_updown.OnEvent("Change", horde_seed_updown_change)
 horde_seed_updown_change(GuiCtrlObj, Info) {
-  ;because strings are okay, no sanitation is performed here
-  ;still using a special updown to allow for larger range
-  if (IsInteger(horde_seed_edit.Value)) {
-    horde_seed_edit.Value := Info ? horde_seed_edit.Value + 1 : horde_seed_edit.Value - 1
-  }
+  number_update(0, 0, 4294967295, 1, 0, horde_seed_edit, Info)
 }
 
 ;horde random seed
@@ -4012,7 +4008,7 @@ horde_generation_status_listview_menu_cancel_job(ItemName, ItemPos, MyMenu) {
 ;--------------------------------------------------
 horde_generation_status_listview_menu_clear_finished_jobs(ItemName, ItemPos, MyMenu) {
   while (A_Index <= horde_generation_status_listview.GetCount()) {
-    if (horde_generation_status_listview.GetText(A_Index, 6) = 1) {
+    if (horde_generation_status_listview.GetText(A_Index, 6) = 1 or horde_generation_status_listview.GetText(A_Index, 12) = "Not Found") {
       horde_generation_status_listview.Delete(A_Index)
       A_Index -= 1
     }
@@ -5257,6 +5253,7 @@ diffusion_time(*) {
       }
     }
   }
+  ;thought["main_vae_decode"]["inputs"]["samples"] := ["main_sampler", 0]
 
   ;upscale
   if (upscale_combobox.Text and upscale_combobox.Text != "None") {
@@ -5310,6 +5307,7 @@ diffusion_time(*) {
     thought["upscale_sampler"]["inputs"]["cfg"] := cfg_upscale_edit.Value
     thought["upscale_sampler"]["inputs"]["denoise"] := denoise_upscale_edit.Value
 
+    ;thought["upscale_vae_decode"]["inputs"]["samples"] := ["upscale_sampler", 0]
     thought["save_image"]["inputs"]["images"] := ["upscale_vae_decode", 0]
   }
   else {
@@ -5713,6 +5711,36 @@ diffusion_time(*) {
       thought["refiner_controlnet_apply_1"]["inputs"]["negative"] := prompt_negative_edit.Text = "00" ? ["refiner_prompt_negative_zero_out", 0] : ["refiner_prompt_negative", 0]
       thought["refiner_sampler"]["inputs"]["positive"] := ["refiner_controlnet_apply_" actual_controlnet_count, 0]
       thought["refiner_sampler"]["inputs"]["negative"] := ["refiner_controlnet_apply_" actual_controlnet_count, 1]
+    }
+  }
+
+  ;adjust noodles if upscaling without sampling
+  if (step_count_edit.Value = 0) {
+    ;bypass the main sampling node
+    thought["main_vae_decode"]["inputs"]["samples"] := thought["main_sampler"]["inputs"]["latent_image"]
+    ;further bypass vae encode/decode if using a source image
+    ;generally, this should only *not* happen if the user wishes to upscale an empty latent
+    if (inputs.Has("source")) {
+      source_image_exit_node := batch_size_edit.Value > 1 ? ["source_image_batcher_" image_batcher_node_count, 0] : ["source_image_loader", 0]
+      if (upscale_combobox.Text and upscale_combobox.Text != "None") {
+        if (upscale_using_model) {
+          thought["upscale_with_model"]["inputs"]["image"] := source_image_exit_node
+        }
+        else {
+          thought["upscale_resize"]["inputs"]["image"] := source_image_exit_node
+        }
+      }
+      else {
+        ;no main sampler and no upscale means the source image goes straight to output
+        thought["save_image"]["inputs"]["images"] := source_image_exit_node
+      }
+    }
+  }
+  ;for upscaling and then not sampling,
+  ;send the image directly to the saving node
+  if (step_count_upscale_edit.Value = 0) {
+    if (upscale_combobox.Text and upscale_combobox.Text != "None") {
+      thought["save_image"]["inputs"]["images"] := ["upscale_resize", 0]
     }
   }
 
@@ -6318,18 +6346,26 @@ summon_the_horde(*) {
 
     ;sidestep issues with seed variation and n
     ;using a loop to send batches of 1
+    if (IsInteger(horde_seed_edit.Text) and horde_seed_edit.Text >= 0 and horde_seed_edit.Text + horde_batch_size_edit.Value - 1 <= 4294967295) {
+      seed_treatment := "int"
+    }
+    else {
+      seed_treatment := "str"
+    }
     loop horde_batch_size_edit.Value {
       if (horde_random_seed_checkbox.Value) {
-        horde_seed_edit.Text := horde_thought["params"]["seed"] := Random(0x7FFFFFFFFFFFFFFF) ""
+        horde_seed_edit.Text := horde_thought["params"]["seed"] := Random(4294967295) ""
       }
       else {
-        horde_thought["params"]["seed"] := horde_seed_edit.Text ""
-        if (A_Index > 1) {
-          if (IsNumber(horde_thought["params"]["seed"]) and horde_thought["params"]["seed"] < 0x7FFFFFFF) {
-            horde_thought["params"]["seed"] := horde_thought["params"]["seed"] + A_Index - 1 . ""
+        if (A_Index = 1) {
+          base_seed := horde_thought["params"]["seed"] := horde_seed_edit.Text
+        }
+        else {
+          if (seed_treatment = "int") {
+            horde_thought["params"]["seed"] := base_seed + A_Index - 1 . ""
           }
-          else {
-            horde_thought["params"]["seed"] .= " " A_Index - 1
+          else if (seed_treatment = "str") {
+            horde_thought["params"]["seed"] := base_seed " " A_Index - 1
           }
         }
       }
@@ -6840,9 +6876,18 @@ message_receive(wParam, lParam, msg, hwnd) {
     case (Instr(possible_string, "horde") = 1):
       horde_string := SubStr(possible_string, 6)
       switch {
-        ;case horde_string = "horde_job":
         case (Instr(horde_string, "horde_job") = 1):
           horde_download_image(SubStr(horde_string, 10))
+          return 1
+        case (horde_string = "something went wrong"):
+          status_text.Text := FormatTime() "`nSomething went wrong."
+          return 1
+        case (Instr(horde_string, "prompt_id_not_found") = 1):
+          not_found_prompt_id := SubStr(horde_string, 20)
+          status_text.Text := FormatTime() "`n" not_found_prompt_id "`nPrompt ID not found or expired."
+          if (existing_job_entry := listview_search(horde_generation_status_listview, not_found_prompt_id)) {
+            horde_generation_status_listview.Modify(existing_job_entry,,,,,,,,,,,,, "Not Found")
+          }
           return 1
         case (Instr(horde_string, "horde_progress") = 1):
           horde_progress_update := (SubStr(horde_string, 15))
