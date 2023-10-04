@@ -6468,7 +6468,7 @@ save_state(slot_id) {
     }
   }
 
-  section_name := overlay_current "_" slot_id
+  save_name := overlay_current "_" slot_id
   try {
     if (overlay_current = "comfy") {
       string_of_pairs := (
@@ -6543,13 +6543,13 @@ save_state(slot_id) {
         )
       }
 
-      IniWrite(string_of_pairs, save_folder "save.ini" , section_name)
+      IniWrite(string_of_pairs, save_folder save_name ".ini", "save")
 
-      FileDelete(save_folder section_name "_*.*")
+      FileDelete(save_folder save_name "_*.*")
       for (existing_image, image_file in inputs) {
         SplitPath image_file, &original_file_name
-        FileCopy(image_file, save_folder section_name "_" original_file_name, 1)
-        IniWrite(section_name "_" original_file_name, save_folder "save.ini" , section_name, "inputs_" existing_image)
+        FileCopy(image_file, save_folder save_name "_" original_file_name, 1)
+        IniWrite(save_name "_" original_file_name, save_folder save_name ".ini", "save", "inputs_" existing_image)
       }
     }
     else if (overlay_current = "horde") {
@@ -6608,16 +6608,16 @@ save_state(slot_id) {
         )
       }
 
-      IniWrite(string_of_pairs, save_folder "save.ini" , section_name)
+      IniWrite(string_of_pairs, save_folder save_name ".ini", "save")
 
-      FileDelete(save_folder section_name "_*.*")
+      FileDelete(save_folder save_name "_*.*")
       for (existing_image, image_file in horde_inputs) {
         SplitPath image_file, &original_file_name
-        FileCopy(image_file, save_folder section_name "_" original_file_name, 1)
-        IniWrite(section_name "_" original_file_name, save_folder "save.ini" , section_name, "horde_inputs_" existing_image)
+        FileCopy(image_file, save_folder save_name "_" original_file_name, 1)
+        IniWrite(save_name "_" original_file_name, save_folder save_name ".ini", "save", "horde_inputs_" existing_image)
       }
     }
-    status_text.Text := FormatTime() "`nSaved`n" section_name
+    status_text.Text := FormatTime() "`nSaved`n" save_name
   }
   catch Error as what_went_wrong {
     oh_no(what_went_wrong)
@@ -6625,97 +6625,97 @@ save_state(slot_id) {
 }
 
 load_state(slot_id) {
-  section_name := overlay_current "_" slot_id
+  save_name := overlay_current "_" slot_id
   try {
     if (overlay_current = "comfy" and assistant_status = "idle") {
-      batch_size_edit.Value := IniRead(save_folder "save.ini", section_name, "batch_size", batch_size_edit.Value)
-      checkpoint_combobox.Text := IniRead(save_folder "save.ini", section_name, "checkpoint", checkpoint_combobox.Text)
-      vae_combobox.Text := IniRead(save_folder "save.ini", section_name, "vae", vae_combobox.Text)
-      sampler_combobox.Text := IniRead(save_folder "save.ini", section_name, "sampler", sampler_combobox.Text)
-      scheduler_combobox.Text := IniRead(save_folder "save.ini", section_name, "scheduler", scheduler_combobox.Text)
-      prompt_positive_edit.Text := IniRead(save_folder "save.ini", section_name, "prompt_positive", prompt_positive_edit.Text)
-      prompt_negative_edit.Text := IniRead(save_folder "save.ini", section_name, "prompt_negative", prompt_negative_edit.Text)
-      seed_edit.Value := IniRead(save_folder "save.ini", section_name, "seed", seed_edit.Value)
-      random_seed_checkbox.Value := IniRead(save_folder "save.ini", section_name, "random_seed", random_seed_checkbox.Value)
+      batch_size_edit.Value := IniRead(save_folder save_name ".ini", "save", "batch_size", batch_size_edit.Value)
+      checkpoint_combobox.Text := IniRead(save_folder save_name ".ini", "save", "checkpoint", checkpoint_combobox.Text)
+      vae_combobox.Text := IniRead(save_folder save_name ".ini", "save", "vae", vae_combobox.Text)
+      sampler_combobox.Text := IniRead(save_folder save_name ".ini", "save", "sampler", sampler_combobox.Text)
+      scheduler_combobox.Text := IniRead(save_folder save_name ".ini", "save", "scheduler", scheduler_combobox.Text)
+      prompt_positive_edit.Text := IniRead(save_folder save_name ".ini", "save", "prompt_positive", prompt_positive_edit.Text)
+      prompt_negative_edit.Text := IniRead(save_folder save_name ".ini", "save", "prompt_negative", prompt_negative_edit.Text)
+      seed_edit.Value := IniRead(save_folder save_name ".ini", "save", "seed", seed_edit.Value)
+      random_seed_checkbox.Value := IniRead(save_folder save_name ".ini", "save", "random_seed", random_seed_checkbox.Value)
       random_seed_checkbox_click(random_seed_checkbox, "")
-      step_count_edit.Value := IniRead(save_folder "save.ini", section_name, "step_count", step_count_edit.Value)
-      cfg_edit.Value := IniRead(save_folder "save.ini", section_name, "cfg", cfg_edit.Value)
-      denoise_edit.Value := IniRead(save_folder "save.ini", section_name, "denoise", denoise_edit.Value)
-      upscale_combobox.Text := IniRead(save_folder "save.ini", section_name, "upscale", upscale_combobox.Text)
+      step_count_edit.Value := IniRead(save_folder save_name ".ini", "save", "step_count", step_count_edit.Value)
+      cfg_edit.Value := IniRead(save_folder save_name ".ini", "save", "cfg", cfg_edit.Value)
+      denoise_edit.Value := IniRead(save_folder save_name ".ini", "save", "denoise", denoise_edit.Value)
+      upscale_combobox.Text := IniRead(save_folder save_name ".ini", "save", "upscale", upscale_combobox.Text)
       upscale_combobox_change(upscale_combobox, "")
-      step_count_upscale_edit.Value := IniRead(save_folder "save.ini", section_name, "step_count_upscale", step_count_upscale_edit.Value)
-      cfg_upscale_edit.Value := IniRead(save_folder "save.ini", section_name, "cfg_upscale", cfg_upscale_edit.Value)
-      denoise_upscale_edit.Value := IniRead(save_folder "save.ini", section_name, "denoise_upscale", denoise_upscale_edit.Value)
-      upscale_value_edit.Value := IniRead(save_folder "save.ini", section_name, "upscale_value", upscale_value_edit.Value)
-      random_seed_upscale_checkbox.Value := IniRead(save_folder "save.ini", section_name, "random_seed_upscale", random_seed_upscale_checkbox.Value)
-      refiner_combobox.Text := IniRead(save_folder "save.ini", section_name, "refiner", refiner_combobox.Text)
+      step_count_upscale_edit.Value := IniRead(save_folder save_name ".ini", "save", "step_count_upscale", step_count_upscale_edit.Value)
+      cfg_upscale_edit.Value := IniRead(save_folder save_name ".ini", "save", "cfg_upscale", cfg_upscale_edit.Value)
+      denoise_upscale_edit.Value := IniRead(save_folder save_name ".ini", "save", "denoise_upscale", denoise_upscale_edit.Value)
+      upscale_value_edit.Value := IniRead(save_folder save_name ".ini", "save", "upscale_value", upscale_value_edit.Value)
+      random_seed_upscale_checkbox.Value := IniRead(save_folder save_name ".ini", "save", "random_seed_upscale", random_seed_upscale_checkbox.Value)
+      refiner_combobox.Text := IniRead(save_folder save_name ".ini", "save", "refiner", refiner_combobox.Text)
       refiner_combobox_change(refiner_combobox, "")
-      refiner_start_step_edit.Value := IniRead(save_folder "save.ini", section_name, "refiner_start_step", refiner_start_step_edit.Value)
-      cfg_refiner_edit.Value := IniRead(save_folder "save.ini", section_name, "cfg_refiner", cfg_refiner_edit.Value)
-      random_seed_refiner_checkbox.Value := IniRead(save_folder "save.ini", section_name, "random_seed_refiner", random_seed_refiner_checkbox.Value)
-      refiner_conditioning_checkbox.Value := IniRead(save_folder "save.ini", section_name, "refiner_conditioning", refiner_conditioning_checkbox.Value)
+      refiner_start_step_edit.Value := IniRead(save_folder save_name ".ini", "save", "refiner_start_step", refiner_start_step_edit.Value)
+      cfg_refiner_edit.Value := IniRead(save_folder save_name ".ini", "save", "cfg_refiner", cfg_refiner_edit.Value)
+      random_seed_refiner_checkbox.Value := IniRead(save_folder save_name ".ini", "save", "random_seed_refiner", random_seed_refiner_checkbox.Value)
+      refiner_conditioning_checkbox.Value := IniRead(save_folder save_name ".ini", "save", "refiner_conditioning", refiner_conditioning_checkbox.Value)
 
-      if(IniRead(save_folder "save.ini", section_name, "source_image", "option_not_found") != "option_not_found") {
+      if(IniRead(save_folder save_name ".ini", "save", "source_image", "option_not_found") != "option_not_found") {
         main_preview_picture_menu_remove("", "", "")
         if (inputs.Has("source")) {
           inputs.Delete("source")
         }
-        if (source_input_file_to_load := IniRead(save_folder "save.ini", section_name, "inputs_source", "")) {
+        if (source_input_file_to_load := IniRead(save_folder save_name ".ini", "save", "inputs_source", "")) {
           if (valid_file := image_load_and_fit(save_folder source_input_file_to_load, main_preview_picture_frame)) {
             inputs["source"] := valid_file
             main_preview_picture_update(0)
           }
         }
         else {
-          image_width_edit.Value := IniRead(save_folder "save.ini", section_name, "image_width", image_width_edit.Value)
-          image_height_edit.Value := IniRead(save_folder "save.ini", section_name, "image_height", image_height_edit.Value)
+          image_width_edit.Value := IniRead(save_folder save_name ".ini", "save", "image_width", image_width_edit.Value)
+          image_height_edit.Value := IniRead(save_folder save_name ".ini", "save", "image_height", image_height_edit.Value)
           image_width_edit_losefocus(image_width_edit, "")
           image_height_edit_losefocus(image_height_edit, "")
         }
       }
 
-      clip_vision_combobox.Text := IniRead(save_folder "save.ini", section_name, "clip_vision", clip_vision_combobox.Text)
-      IPAdapter_combobox.Text := IniRead(save_folder "save.ini", section_name, "IPAdapter", IPAdapter_combobox.Text)
+      clip_vision_combobox.Text := IniRead(save_folder save_name ".ini", "save", "clip_vision", clip_vision_combobox.Text)
+      IPAdapter_combobox.Text := IniRead(save_folder save_name ".ini", "save", "IPAdapter", IPAdapter_combobox.Text)
 
       ;this just checks for the first row in the saved listview
       ;"option_not_found" means that there's no value in the save file
       ;as opposed to the value existing, but being empty
-      if (IniRead(save_folder "save.ini", section_name, "image_prompt_1_image", "option_not_found") != "option_not_found") {
+      if (IniRead(save_folder save_name ".ini", "save", "image_prompt_1_image", "option_not_found") != "option_not_found") {
         while (A_Index <= image_prompt_active_listview.GetCount()) {
           if (inputs.Has(image_prompt_image_to_clear := image_prompt_active_listview.GetText(A_Index, 1))) {
             inputs.Delete(image_prompt_image_to_clear)
           }
         }
         image_prompt_active_listview.Delete()
-        while ((image_prompt_image := IniRead(save_folder "save.ini", section_name, "image_prompt_" A_Index "_image", "option_not_found")) != "option_not_found") {
-          image_prompt_active_listview.Add(, image_prompt_image, IniRead(save_folder "save.ini", section_name, "image_prompt_" A_Index "_strength", ""), IniRead(save_folder "save.ini", section_name, "image_prompt_" A_Index "_noise", ""))
-          if (image_prompt_input_file_to_load := IniRead(save_folder "save.ini", section_name, "inputs_" image_prompt_image, "")) {
+        while ((image_prompt_image := IniRead(save_folder save_name ".ini", "save", "image_prompt_" A_Index "_image", "option_not_found")) != "option_not_found") {
+          if ((image_prompt_input_file_to_load := IniRead(save_folder save_name ".ini", "save", "inputs_" image_prompt_image, "")) and FileExist(save_folder image_prompt_input_file_to_load)) {
             SplitPath image_prompt_input_file_to_load,,, &original_file_extension
             FileCopy(save_folder image_prompt_input_file_to_load, input_folder image_prompt_image "." original_file_extension, 1)
             inputs[image_prompt_image] := input_folder image_prompt_image "." original_file_extension
           }
+          image_prompt_active_listview.Add(, inputs.Has(image_prompt_image) ? image_prompt_image : "", IniRead(save_folder save_name ".ini", "save", "image_prompt_" A_Index "_strength", ""), IniRead(save_folder save_name ".ini", "save", "image_prompt_" A_Index "_noise", ""))
         }
         image_prompt_active_listview.Modify(1 ,"Select Vis")
         image_prompt_active_listview_itemselect(image_prompt_active_listview, "", "")
       }
 
-      if (IniRead(save_folder "save.ini", section_name, "lora_1_name", "option_not_found") != "option_not_found") {
+      if (IniRead(save_folder save_name ".ini", "save", "lora_1_name", "option_not_found") != "option_not_found") {
         lora_active_listview.Delete()
-        while ((lora_name := IniRead(save_folder "save.ini", section_name, "lora_" A_Index "_name", "option_not_found")) != "option_not_found") {
-          lora_active_listview.Add(, lora_name, IniRead(save_folder "save.ini", section_name, "lora_" A_Index "_strength", ""))
+        while ((lora_name := IniRead(save_folder save_name ".ini", "save", "lora_" A_Index "_name", "option_not_found")) != "option_not_found") {
+          lora_active_listview.Add(, lora_name, IniRead(save_folder save_name ".ini", "save", "lora_" A_Index "_strength", ""))
         }
         lora_active_listview.Modify(1 ,"Select Vis")
         lora_active_listview_itemselect(lora_active_listview, "", "")
       }
 
-      mask_pixels_combobox.Text := IniRead(save_folder "save.ini", section_name, "mask_pixels", mask_pixels_combobox.Text)
-      mask_grow_edit.Value := IniRead(save_folder "save.ini", section_name, "mask_grow", mask_grow_edit.Value)
-      mask_feather_edit.Value := IniRead(save_folder "save.ini", section_name, "mask_feather", mask_feather_edit.Value)
-      inpainting_checkpoint_checkbox.Value := IniRead(save_folder "save.ini", section_name, "inpainting_checkpoint", inpainting_checkpoint_checkbox.Value)
+      mask_pixels_combobox.Text := IniRead(save_folder save_name ".ini", "save", "mask_pixels", mask_pixels_combobox.Text)
+      mask_grow_edit.Value := IniRead(save_folder save_name ".ini", "save", "mask_grow", mask_grow_edit.Value)
+      mask_feather_edit.Value := IniRead(save_folder save_name ".ini", "save", "mask_feather", mask_feather_edit.Value)
+      inpainting_checkpoint_checkbox.Value := IniRead(save_folder save_name ".ini", "save", "inpainting_checkpoint", inpainting_checkpoint_checkbox.Value)
 
-      if(IniRead(save_folder "save.ini", section_name, "mask_image", "option_not_found") != "option_not_found") {
+      if(IniRead(save_folder save_name ".ini", "save", "mask_image", "option_not_found") != "option_not_found") {
         mask_picture_menu_remove("", "", "")
-        if (mask_input_file_to_load := IniRead(save_folder "save.ini", section_name, "inputs_mask", "")) {
+        if (mask_input_file_to_load := IniRead(save_folder save_name ".ini", "save", "inputs_mask", "")) {
           if (inputs.Has("mask")) {
             inputs.Delete("mask")
           }
@@ -6725,7 +6725,7 @@ load_state(slot_id) {
         }
       }
 
-      if (IniRead(save_folder "save.ini", section_name, "controlnet_1_image", "option_not_found") != "option_not_found") {
+      if (IniRead(save_folder save_name ".ini", "save", "controlnet_1_image", "option_not_found") != "option_not_found") {
         while (A_Index <= controlnet_active_listview.GetCount()) {
           if (inputs.Has(controlnet_image_to_clear := controlnet_active_listview.GetText(A_Index, 1))) {
             inputs.Delete(controlnet_image_to_clear)
@@ -6735,13 +6735,13 @@ load_state(slot_id) {
           }
         }
         controlnet_active_listview.Delete()
-        while ((controlnet_image := IniRead(save_folder "save.ini", section_name, "controlnet_" A_Index "_image", "option_not_found")) != "option_not_found") {
-          controlnet_active_listview.Add(, controlnet_image, IniRead(save_folder "save.ini", section_name, "controlnet_" A_Index "_checkpoint", ""), IniRead(save_folder "save.ini", section_name, "controlnet_" A_Index "_strength", ""), IniRead(save_folder "save.ini", section_name, "controlnet_" A_Index "_start", ""), IniRead(save_folder "save.ini", section_name, "controlnet_" A_Index "_end", ""), IniRead(save_folder "save.ini", section_name, "controlnet_" A_Index "_preprocessor", ""), IniRead(save_folder "save.ini", section_name, "controlnet_" A_Index "_preprocessor_options", ""))
-          if (controlnet_input_file_to_load := IniRead(save_folder "save.ini", section_name, "inputs_" controlnet_image, "")) {
+        while ((controlnet_image := IniRead(save_folder save_name ".ini", "save", "controlnet_" A_Index "_image", "option_not_found")) != "option_not_found") {
+          if ((controlnet_input_file_to_load := IniRead(save_folder save_name ".ini", "save", "inputs_" controlnet_image, "")) and FileExist(save_folder controlnet_input_file_to_load)) {
             SplitPath controlnet_input_file_to_load,,, &original_file_extension
             FileCopy(save_folder controlnet_input_file_to_load, input_folder controlnet_image "." original_file_extension, 1)
             inputs[controlnet_image] := input_folder controlnet_image "." original_file_extension
           }
+          controlnet_active_listview.Add(, inputs.Has(controlnet_image) ? controlnet_image : "", IniRead(save_folder save_name ".ini", "save", "controlnet_" A_Index "_checkpoint", ""), IniRead(save_folder save_name ".ini", "save", "controlnet_" A_Index "_strength", ""), IniRead(save_folder save_name ".ini", "save", "controlnet_" A_Index "_start", ""), IniRead(save_folder save_name ".ini", "save", "controlnet_" A_Index "_end", ""), IniRead(save_folder save_name ".ini", "save", "controlnet_" A_Index "_preprocessor", ""), IniRead(save_folder save_name ".ini", "save", "controlnet_" A_Index "_preprocessor_options", ""))
         }
         controlnet_active_listview.Modify(1 ,"Select Vis")
         controlnet_active_listview_itemselect(controlnet_active_listview, "", "")
@@ -6749,32 +6749,32 @@ load_state(slot_id) {
 
     }
     else if (overlay_current = "horde") {
-      horde_batch_size_edit.Value := IniRead(save_folder "save.ini", section_name, "horde_batch_size", horde_batch_size_edit.Value)
-      horde_checkpoint_combobox.Text := IniRead(save_folder "save.ini", section_name, "horde_checkpoint", horde_checkpoint_combobox.Text)
-      horde_sampler_combobox.Text := IniRead(save_folder "save.ini", section_name, "horde_sampler", horde_sampler_combobox.Text)
-      horde_clip_skip_edit.Value := IniRead(save_folder "save.ini", section_name, "horde_clip_skip", horde_clip_skip_edit.Value)
-      horde_karras_checkbox.Value := IniRead(save_folder "save.ini", section_name, "horde_karras", horde_karras_checkbox.Value)
-      horde_hires_fix_checkbox.Value := IniRead(save_folder "save.ini", section_name, "horde_hires_fix", horde_hires_fix_checkbox.Value)
-      horde_tiling_checkbox.Value := IniRead(save_folder "save.ini", section_name, "horde_tiling", horde_tiling_checkbox.Value)
-      horde_prompt_positive_edit.Text := IniRead(save_folder "save.ini", section_name, "horde_prompt_positive", horde_prompt_positive_edit.Text)
-      horde_prompt_negative_edit.Text := IniRead(save_folder "save.ini", section_name, "horde_prompt_negative", horde_prompt_negative_edit.Text)
-      horde_seed_edit.Text := IniRead(save_folder "save.ini", section_name, "horde_seed", horde_seed_edit.Text)
-      horde_random_seed_checkbox.Value := IniRead(save_folder "save.ini", section_name, "horde_random_seed", horde_random_seed_checkbox.Value)
+      horde_batch_size_edit.Value := IniRead(save_folder save_name ".ini", "save", "horde_batch_size", horde_batch_size_edit.Value)
+      horde_checkpoint_combobox.Text := IniRead(save_folder save_name ".ini", "save", "horde_checkpoint", horde_checkpoint_combobox.Text)
+      horde_sampler_combobox.Text := IniRead(save_folder save_name ".ini", "save", "horde_sampler", horde_sampler_combobox.Text)
+      horde_clip_skip_edit.Value := IniRead(save_folder save_name ".ini", "save", "horde_clip_skip", horde_clip_skip_edit.Value)
+      horde_karras_checkbox.Value := IniRead(save_folder save_name ".ini", "save", "horde_karras", horde_karras_checkbox.Value)
+      horde_hires_fix_checkbox.Value := IniRead(save_folder save_name ".ini", "save", "horde_hires_fix", horde_hires_fix_checkbox.Value)
+      horde_tiling_checkbox.Value := IniRead(save_folder save_name ".ini", "save", "horde_tiling", horde_tiling_checkbox.Value)
+      horde_prompt_positive_edit.Text := IniRead(save_folder save_name ".ini", "save", "horde_prompt_positive", horde_prompt_positive_edit.Text)
+      horde_prompt_negative_edit.Text := IniRead(save_folder save_name ".ini", "save", "horde_prompt_negative", horde_prompt_negative_edit.Text)
+      horde_seed_edit.Text := IniRead(save_folder save_name ".ini", "save", "horde_seed", horde_seed_edit.Text)
+      horde_random_seed_checkbox.Value := IniRead(save_folder save_name ".ini", "save", "horde_random_seed", horde_random_seed_checkbox.Value)
       horde_random_seed_checkbox_click(horde_random_seed_checkbox, "")
-      horde_seed_variation_edit.Value := IniRead(save_folder "save.ini", section_name, "horde_seed_variation", horde_seed_variation_edit.Value)
-      horde_step_count_edit.Value := IniRead(save_folder "save.ini", section_name, "horde_step_count", horde_step_count_edit.Value)
-      horde_cfg_edit.Value := IniRead(save_folder "save.ini", section_name, "horde_cfg", horde_cfg_edit.Value)
-      horde_denoise_edit.Value := IniRead(save_folder "save.ini", section_name, "horde_denoise", horde_denoise_edit.Value)
+      horde_seed_variation_edit.Value := IniRead(save_folder save_name ".ini", "save", "horde_seed_variation", horde_seed_variation_edit.Value)
+      horde_step_count_edit.Value := IniRead(save_folder save_name ".ini", "save", "horde_step_count", horde_step_count_edit.Value)
+      horde_cfg_edit.Value := IniRead(save_folder save_name ".ini", "save", "horde_cfg", horde_cfg_edit.Value)
+      horde_denoise_edit.Value := IniRead(save_folder save_name ".ini", "save", "horde_denoise", horde_denoise_edit.Value)
 
-      horde_controlnet_type_combobox.Text := IniRead(save_folder "save.ini", section_name, "horde_controlnet_type", horde_controlnet_type_combobox.Text)
-      horde_controlnet_option_dropdownlist.Value := IniRead(save_folder "save.ini", section_name, "horde_controlnet_option", horde_controlnet_option_dropdownlist.Value)
+      horde_controlnet_type_combobox.Text := IniRead(save_folder save_name ".ini", "save", "horde_controlnet_type", horde_controlnet_type_combobox.Text)
+      horde_controlnet_option_dropdownlist.Value := IniRead(save_folder save_name ".ini", "save", "horde_controlnet_option", horde_controlnet_option_dropdownlist.Value)
 
-      if(IniRead(save_folder "save.ini", section_name, "horde_source_image", "option_not_found") != "option_not_found") {
+      if(IniRead(save_folder save_name ".ini", "save", "horde_source_image", "option_not_found") != "option_not_found") {
         horde_source_picture_menu_remove("", "", "")
         if (horde_inputs.Has("horde_source")) {
           horde_inputs.Delete("horde_source")
         }
-        if (horde_source_input_file_to_load := IniRead(save_folder "save.ini", section_name, "horde_inputs_horde_source", "")) {
+        if (horde_source_input_file_to_load := IniRead(save_folder save_name ".ini", "save", "horde_inputs_horde_source", "")) {
           if (valid_file := image_load_and_fit(save_folder horde_source_input_file_to_load, horde_source_picture_frame)) {
             horde_inputs["horde_source"] := valid_file
             horde_source_picture_update(0)
@@ -6782,26 +6782,26 @@ load_state(slot_id) {
         }
       }
 
-      if(IniRead(save_folder "save.ini", section_name, "horde_mask_image", "option_not_found") != "option_not_found") {
+      if(IniRead(save_folder save_name ".ini", "save", "horde_mask_image", "option_not_found") != "option_not_found") {
         horde_mask_picture_menu_remove("", "", "")
         if (horde_inputs.Has("horde_mask")) {
           horde_inputs.Delete("horde_mask")
         }
-        if (horde_mask_input_file_to_load := IniRead(save_folder "save.ini", section_name, "horde_inputs_horde_mask", "")) {
+        if (horde_mask_input_file_to_load := IniRead(save_folder save_name ".ini", "save", "horde_inputs_horde_mask", "")) {
           if (valid_file := image_load_and_fit(save_folder horde_mask_input_file_to_load, horde_mask_picture_frame)) {
             horde_inputs["horde_mask"] := valid_file
           }
         }
       }
 
-      horde_image_width_edit.Value := IniRead(save_folder "save.ini", section_name, "horde_image_width", horde_image_width_edit.Value)
-      horde_image_height_edit.Value := IniRead(save_folder "save.ini", section_name, "horde_image_height", horde_image_height_edit.Value)
+      horde_image_width_edit.Value := IniRead(save_folder save_name ".ini", "save", "horde_image_width", horde_image_width_edit.Value)
+      horde_image_height_edit.Value := IniRead(save_folder save_name ".ini", "save", "horde_image_height", horde_image_height_edit.Value)
 
-      if(IniRead(save_folder "save.ini", section_name, "horde_post_processing_1", "option_not_found") != "option_not_found") {
+      if(IniRead(save_folder save_name ".ini", "save", "horde_post_processing_1", "option_not_found") != "option_not_found") {
         while (A_Index <= horde_post_process_active_listview.GetCount()) {
           horde_post_process_active_listview.Modify(A_Index, "-Check")
         }
-        while (horde_post_processing_name := IniRead(save_folder "save.ini", section_name, "horde_post_processing_" A_Index, "")) {
+        while (horde_post_processing_name := IniRead(save_folder save_name ".ini", "save", "horde_post_processing_" A_Index, "")) {
           if (existing_horde_post_processing_entry := listview_search(horde_post_process_active_listview, horde_post_processing_name)) {
             horde_post_process_active_listview.Delete(existing_horde_post_processing_entry)
           }
@@ -6810,27 +6810,27 @@ load_state(slot_id) {
         horde_post_process_active_listview_itemselect(horde_post_process_active_listview, "", "")
       }
 
-      horde_facefixer_strength_edit.Value := IniRead(save_folder "save.ini", section_name, "horde_facefixer_strength", horde_facefixer_strength_edit.Value)
+      horde_facefixer_strength_edit.Value := IniRead(save_folder save_name ".ini", "save", "horde_facefixer_strength", horde_facefixer_strength_edit.Value)
 
-      if (IniRead(save_folder "save.ini", section_name, "horde_lora_1_name", "option_not_found") != "option_not_found") {
+      if (IniRead(save_folder save_name ".ini", "save", "horde_lora_1_name", "option_not_found") != "option_not_found") {
         horde_lora_active_listview.Delete()
-        while ((horde_lora_name := IniRead(save_folder "save.ini", section_name, "horde_lora_" A_Index "_name", "option_not_found")) != "option_not_found") {
-          horde_lora_active_listview.Add(, horde_lora_name, IniRead(save_folder "save.ini", section_name, "horde_lora_" A_Index "_strength", ""), IniRead(save_folder "save.ini", section_name, "horde_lora_" A_Index "_inject_trigger"))
+        while ((horde_lora_name := IniRead(save_folder save_name ".ini", "save", "horde_lora_" A_Index "_name", "option_not_found")) != "option_not_found") {
+          horde_lora_active_listview.Add(, horde_lora_name, IniRead(save_folder save_name ".ini", "save", "horde_lora_" A_Index "_strength", ""), IniRead(save_folder save_name ".ini", "save", "horde_lora_" A_Index "_inject_trigger"))
         }
         horde_lora_active_listview.Modify(1 ,"Select Vis")
         horde_lora_active_listview_itemselect(horde_lora_active_listview, "", "")
       }
 
-      if (IniRead(save_folder "save.ini", section_name, "horde_textual_inversion_1_name", "option_not_found") != "option_not_found") {
+      if (IniRead(save_folder save_name ".ini", "save", "horde_textual_inversion_1_name", "option_not_found") != "option_not_found") {
         horde_textual_inversion_active_listview.Delete()
-        while ((horde_textual_inversion_name := IniRead(save_folder "save.ini", section_name, "horde_textual_inversion_" A_Index "_name", "option_not_found")) != "option_not_found") {
-          horde_textual_inversion_active_listview.Add(, horde_textual_inversion_name, IniRead(save_folder "save.ini", section_name, "horde_textual_inversion_" A_Index "_inject_field", ""), IniRead(save_folder "save.ini", section_name, "horde_textual_inversion_" A_Index "_strength"))
+        while ((horde_textual_inversion_name := IniRead(save_folder save_name ".ini", "save", "horde_textual_inversion_" A_Index "_name", "option_not_found")) != "option_not_found") {
+          horde_textual_inversion_active_listview.Add(, horde_textual_inversion_name, IniRead(save_folder save_name ".ini", "save", "horde_textual_inversion_" A_Index "_inject_field", ""), IniRead(save_folder save_name ".ini", "save", "horde_textual_inversion_" A_Index "_strength"))
         }
         horde_textual_inversion_active_listview.Modify(1 ,"Select Vis")
         horde_textual_inversion_active_listview_itemselect(horde_textual_inversion_active_listview, "", "")
       }
     }
-    status_text.Text := FormatTime() "`nLoaded`n" section_name
+    status_text.Text := FormatTime() "`nLoaded`n" save_name
   }
   catch Error as what_went_wrong {
     oh_no(what_went_wrong)
