@@ -5618,8 +5618,8 @@ diffusion_time(*) {
           ,"class_type", actual_name
         )
         ;untangle the string
-        if (controlnet_active_listview.GetText(actual_controlnet_count, 7) != "") {
-          Loop Parse controlnet_active_listview.GetText(actual_controlnet_count, 7), "," {
+        if (controlnet_active_listview.GetText(A_Index, 7) != "") {
+          Loop Parse controlnet_active_listview.GetText(A_Index, 7), "," {
             option_pair := StrSplit(A_LoopField, ":")
             thought["controlnet_preprocessor_" actual_controlnet_count]["inputs"][option_pair[1]] := IsNumber(option_pair[2]) ? option_pair[2] + 0 : option_pair[2]
           }
