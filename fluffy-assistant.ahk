@@ -2614,7 +2614,7 @@ connect_menu(ItemName, ItemPos, MyMenu) {
   if (server_address != "") {
     connect_to_server()
   }
-  else if (horde_address != "") {
+  if (horde_address != "") {
     connect_to_horde()
   }
 }
@@ -4008,7 +4008,7 @@ horde_generation_status_listview_menu_cancel_job(ItemName, ItemPos, MyMenu) {
 ;--------------------------------------------------
 horde_generation_status_listview_menu_clear_finished_jobs(ItemName, ItemPos, MyMenu) {
   while (A_Index <= horde_generation_status_listview.GetCount()) {
-    if (horde_generation_status_listview.GetText(A_Index, 6) = 1) {
+    if (horde_generation_status_listview.GetText(A_Index, 6) = 1 or horde_generation_status_listview.GetText(A_Index, 12) = "Not Found") {
       horde_generation_status_listview.Delete(A_Index)
       A_Index -= 1
     }
@@ -6876,9 +6876,18 @@ message_receive(wParam, lParam, msg, hwnd) {
     case (Instr(possible_string, "horde") = 1):
       horde_string := SubStr(possible_string, 6)
       switch {
-        ;case horde_string = "horde_job":
         case (Instr(horde_string, "horde_job") = 1):
           horde_download_image(SubStr(horde_string, 10))
+          return 1
+        case (horde_string = "something went wrong"):
+          status_text.Text := FormatTime() "`nSomething went wrong."
+          return 1
+        case (Instr(horde_string, "prompt_id_not_found") = 1):
+          not_found_prompt_id := SubStr(horde_string, 20)
+          status_text.Text := FormatTime() "`n" not_found_prompt_id "`nPrompt ID not found or expired."
+          if (existing_job_entry := listview_search(horde_generation_status_listview, not_found_prompt_id)) {
+            horde_generation_status_listview.Modify(existing_job_entry,,,,,,,,,,,,, "Not Found")
+          }
           return 1
         case (Instr(horde_string, "horde_progress") = 1):
           horde_progress_update := (SubStr(horde_string, 15))
