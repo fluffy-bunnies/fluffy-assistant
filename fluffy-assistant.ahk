@@ -5872,7 +5872,7 @@ diffusion_time(*) {
   ;saving
   generation_time := thought["save_image"]["inputs"]["filename_prefix"] := A_Now
 
-  A_Clipboard := prayer := Jxon_dump(Map("prompt", thought, "client_id", client_id))
+  prayer := Jxon_dump(Map("prompt", thought, "client_id", client_id))
 
   try {
     altar.Open("POST", "http://" server_address "/prompt", false)
