@@ -32,7 +32,7 @@ fluffy-assistant is an interface for ComfyUI created to assist with image genera
 <ul>
 <li>For more options, make a copy of the settings.ini.example file, rename it to settings.ini and open with a text editor (or click on "Open Settings File" and the script will attempt to do this automatically with Notepad).</li>
 <li>By default, CapsLock is used to toggle the overlay's visibility. This can be changed or disabled. IF YOU CANNOT STOP SHOUTING, press CapsLock while holding down a modifier key (press Shift+CapsLock for example).</li>
-<li>Pressing an F-key (F1 to F12) loads a saved state. Pressing Shift+F-key saves the current generation parameters to the corresponding slot. This is enabled by default to enable some minor protection against bugs.</li>
+<li>Pressing Shift+F-key (F1 to F12) saves the current generation parameters to a save slot. Pressing an F-key (without shift) loads the corresponding saved state. A new set of 12 slots can be created by changing the "Workspace". Save states are enabled by default as insurance against some bugs.</li>
 <li>Other hotkeys can be set in the settings file for clipboard operation shortcuts or to toggle only one specific overlay.</li>
 <li>By default, the script does not automatically connect to any server. Save an address to change this behaviour.</li>
 <br>
