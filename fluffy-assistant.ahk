@@ -693,7 +693,7 @@ workspace_combobox := workspace_selection.Add("ComboBox", "x0 y" gap_y " w" A_Sc
 if (use_save_and_load_hotkeys) {
   if (DirExist(save_folder)) {
     workspace_combobox.Opt("-Redraw")
-    Loop Files save_folder "\*", "D" {
+    Loop Files save_folder "*", "D" {
       if (Instr(A_LoopFileName, "comfy - ") = 1) {
         workspace_combobox.Add([Substr(A_LoopFileName, 9)])
       }
@@ -924,6 +924,10 @@ output_picture_menu.Add("Send to Mask (Horde)", output_picture_menu_to_horde_mas
 output_picture_menu.Add()
 output_picture_menu.Add("Copy", output_picture_menu_copy)
 
+;workspace
+;--------------------------------------------------
+workspace_combobox_menu := Menu()
+workspace_combobox_menu.Add("Delete this Workspace", workspace_combobox_menu_delete_workspace)
 
 ;status box
 ;--------------------------------------------------
@@ -2639,6 +2643,25 @@ output_picture_menu_copy(*) {
 }
 
 ;--------------------------------------------------
+;workspace
+;--------------------------------------------------
+workspace_combobox.OnEvent("ContextMenu", workspace_combobox_contextmenu)
+workspace_combobox_contextmenu(GuiCtrlObj, Item, IsRightClick, X, Y) {
+  workspace_combobox_menu.Show()
+}
+
+workspace_combobox_menu_delete_workspace(ItemName, ItemPos, MyMenu) {
+  workspace_folder := save_folder "comfy - " workspace_combobox.Text "\"
+  if(DirExist(workspace_folder)) {
+    DirDelete workspace_folder, 1
+  }
+  if (workspace_combobox.Value) {
+    workspace_combobox.Delete(workspace_combobox.Value)
+  }
+  workspace_combobox.Text := "default"
+}
+
+;--------------------------------------------------
 ;status box
 ;--------------------------------------------------
 status_picture.OnEvent("ContextMenu", status_picture_contextmenu)
@@ -3181,7 +3204,7 @@ horde_workspace_combobox := horde_workspace_selection.Add("ComboBox", "x0 y" gap
 if (use_save_and_load_hotkeys) {
   if (DirExist(save_folder)) {
     horde_workspace_combobox.Opt("-Redraw")
-    Loop Files save_folder "\*", "D" {
+    Loop Files save_folder "*", "D" {
       if (Instr(A_LoopFileName, "horde - ") = 1) {
         horde_workspace_combobox.Add([Substr(A_LoopFileName, 9)])
       }
@@ -3339,6 +3362,12 @@ horde_generation_status_listview_menu.Add("Salvage", horde_generation_status_lis
 horde_generation_status_listview_menu.Add("Cancel", horde_generation_status_listview_menu_cancel_job)
 horde_generation_status_listview_menu.Add()
 horde_generation_status_listview_menu.Add("Clear Finished Jobs", horde_generation_status_listview_menu_clear_finished_jobs)
+
+;horde workspace
+;--------------------------------------------------
+horde_workspace_combobox_menu := Menu()
+horde_workspace_combobox_menu.Add("Delete this Workspace", horde_workspace_combobox_menu_delete_workspace)
+
 
 ;horde picture frames
 ;--------------------------------------------------
@@ -4248,6 +4277,26 @@ horde_output_picture_menu_copy(*) {
 }
 
 ;--------------------------------------------------
+;horde workspace
+;--------------------------------------------------
+
+horde_workspace_combobox.OnEvent("ContextMenu", horde_workspace_combobox_contextmenu)
+horde_workspace_combobox_contextmenu(GuiCtrlObj, Item, IsRightClick, X, Y) {
+  horde_workspace_combobox_menu.Show()
+}
+
+horde_workspace_combobox_menu_delete_workspace(ItemName, ItemPos, MyMenu) {
+  workspace_folder := save_folder "horde - " horde_workspace_combobox.Text "\"
+  if(DirExist(workspace_folder)) {
+    DirDelete workspace_folder, 1
+  }
+  if (horde_workspace_combobox.Value) {
+    horde_workspace_combobox.Delete(horde_workspace_combobox.Value)
+  }
+  horde_workspace_combobox.Text := "default"
+}
+
+;--------------------------------------------------
 ;--------------------------------------------------
 ;gui window positioning
 ;--------------------------------------------------
@@ -4553,7 +4602,7 @@ load_f_hotkey(f_key) {
 }
 
 save_f_hotkey(f_key) {
-  if (overlay_current = "comfy" and workspace_combobox.Text != "") {
+  if (overlay_current = "comfy" and workspace_combobox.Text != "" and !InStr(workspace_combobox.Text, "\") and !InStr(workspace_combobox.Text, "/")) {
     workspace_folder := save_folder "comfy - " workspace_combobox.Text "\"
     if (!DirExist(workspace_folder)) {
       try {
@@ -4565,10 +4614,11 @@ save_f_hotkey(f_key) {
         return
       }
     }
-
-    save_state(workspace_folder, SubStr(f_key, 3))
+    if (DirExist(workspace_folder)) {
+      save_state(workspace_folder, SubStr(f_key, 3))
+    }
   }
-  else if (overlay_current = "horde" and horde_workspace_combobox.Text != "") {
+  else if (overlay_current = "horde" and horde_workspace_combobox.Text != "" and !InStr(horde_workspace_combobox.Text, "\") and !InStr(horde_workspace_combobox.Text, "/")) {
     workspace_folder := save_folder "horde - " horde_workspace_combobox.Text "\"
     if (!DirExist(workspace_folder)) {
       try {
@@ -4581,7 +4631,9 @@ save_f_hotkey(f_key) {
       }
     }
 
-    save_state(workspace_folder, SubStr(f_key, 3))
+    if (DirExist(workspace_folder)) {
+      save_state(workspace_folder, SubStr(f_key, 3))
+    }
   }
 }
 
