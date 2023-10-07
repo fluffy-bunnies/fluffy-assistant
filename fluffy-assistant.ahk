@@ -2654,6 +2654,7 @@ workspace_combobox_menu_delete_workspace(ItemName, ItemPos, MyMenu) {
   workspace_folder := save_folder "comfy - " workspace_combobox.Text "\"
   if(DirExist(workspace_folder)) {
     DirDelete workspace_folder, 1
+    status_text.Text := FormatTime() "`nDeleted`ncomfy - " workspace_combobox.Text
   }
   if (workspace_combobox.Value) {
     workspace_combobox.Delete(workspace_combobox.Value)
@@ -4289,6 +4290,7 @@ horde_workspace_combobox_menu_delete_workspace(ItemName, ItemPos, MyMenu) {
   workspace_folder := save_folder "horde - " horde_workspace_combobox.Text "\"
   if(DirExist(workspace_folder)) {
     DirDelete workspace_folder, 1
+    status_text.Text := FormatTime() "`nDeleted`nhorde - " horde_workspace_combobox.Text
   }
   if (horde_workspace_combobox.Value) {
     horde_workspace_combobox.Delete(horde_workspace_combobox.Value)
