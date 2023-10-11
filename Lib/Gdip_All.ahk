@@ -1,4 +1,5 @@
 ;https://github.com/buliasz/AHKv2-Gdip
+;original Gdip.ahk by tic (Tariq Porter):  https://www.autohotkey.com/board/topic/29449-gdi-standard-library-145-by-tic/
 
 ; v1.61
 ;

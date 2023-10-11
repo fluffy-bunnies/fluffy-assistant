@@ -1,21 +1,9 @@
-;https://www.autohotkey.com/boards/viewtopic.php?t=112741
-;Chr changed to Char
-;default to empty string
-LC_UriEncode(Uri, RE := "[0-9A-Za-z]")
-{
-    Var := Buffer(StrPut(Uri, "UTF-8"), 0)
-    StrPut(Uri, Var, "UTF-8")
+;adapted from https://github.com/ahkscript/libcrypt.ahk
+
+LC_UriEncode(Uri, RE:="[0-9A-Za-z]") {
 	Res := ""
-    While Code := NumGet(Var, A_Index - 1, "UChar")
-    {
-        if RegExMatch(Char := Chr(Code), RE)
-        {
-            Res .= Char
-        }
-        else
-        {
-            Res .= Format("%{:02X}", Code)
-        }
-    }
-    return Res
+	Var := Buffer(StrPut(Uri, "UTF-8"), 0), StrPut(Uri, Var, "UTF-8")
+	While Code := NumGet(Var, A_Index - 1, "UChar")
+		Res .= (Char:=Chr(Code)) ~= RE ? Char : Format("%{:02X}", Code)
+	Return Res
 }

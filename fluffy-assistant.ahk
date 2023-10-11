@@ -2,7 +2,6 @@
 #SingleInstance Force
 #Include <_JXON>
 #Include <Gdip_All>
-#Include <CreateFormData>
 #Include <LC_UriEncode>
 
 ;--------------------------------------------------
@@ -58,6 +57,15 @@ label_size := IniRead("settings.ini", "settings", "label_size", 12)
 label_size := label_size = "" ? 12 : label_size
 label_colour := IniRead("settings.ini", "settings", "label_colour", "0xE0E0E0")
 label_colour := label_colour = "" ? "0xE0E0E0" : label_colour
+status_rows := IniRead("settings.ini", "settings", "status_rows", 15)
+status_rows := status_rows = "" ? 15 : status_rows
+status_font := IniRead("settings.ini", "settings", "status_font", "Arial")
+status_font := status_font = "" ? "Arial" : status_font
+status_size := IniRead("settings.ini", "settings", "status_size", 12)
+status_size := status_size = "" ? 12 : status_size
+status_colour := IniRead("settings.ini", "settings", "status_colour", "0xE0E0E0")
+status_colour := status_colour = "" ? "0xE0E0E0" : status_colour
+
 gap_x := IniRead("settings.ini", "settings", "gap_x", 25)
 gap_x := gap_x = "" ? 25 : gap_x
 gap_y := IniRead("settings.ini", "settings", "gap_y", 25)
@@ -246,7 +254,7 @@ seed_updown := main_controls.Add("UpDown", "Range0-1 0x80 -2")
 ;instead of changing only the control's font after creation
 ;reverted for safety after done drawing
 seed_edit.GetPos(&stored_gui_x, &stored_gui_y, &stored_gui_w, &stored_gui_h)
-main_controls.SetFont("c" label_colour " q3", label_font)
+main_controls.SetFont("s" label_size " c" label_colour " q3", label_font)
 random_seed_checkbox := main_controls.Add("CheckBox", "x" stored_gui_x " y" stored_gui_y + stored_gui_h + 1, "Random")
 main_controls.SetFont("s" text_size " c" text_colour " q0", text_font)
 
@@ -290,7 +298,7 @@ upscale_value_edit := main_controls.Add("Edit", "x" stored_gui_x + stored_gui_w 
 upscale_value_updown := main_controls.Add("UpDown", "Range0-1 0x80 -2 Disabled", 0)
 
 upscale_value_edit.GetPos(&stored_gui_x, &stored_gui_y, &stored_gui_w, &stored_gui_h)
-main_controls.SetFont("c" label_colour " q3", label_font)
+main_controls.SetFont("s" label_size " c" label_colour " q3", label_font)
 random_seed_upscale_checkbox := main_controls.Add("CheckBox", "x" stored_gui_x + stored_gui_w + updown_default_w + updown_offset_x + gap_x " y0 Disabled", "Random Seed")
 main_controls.SetFont("s" text_size " c" text_colour " q0", text_font)
 ;get specific value
@@ -312,7 +320,7 @@ cfg_refiner_edit := main_controls.Add("Edit", "x" stored_gui_x + stored_gui_w + 
 cfg_refiner_updown := main_controls.Add("UpDown", "Range0-1 0x80 -2 Disabled", 0)
 
 cfg_refiner_edit.GetPos(&stored_gui_x, &stored_gui_y, &stored_gui_w, &stored_gui_h)
-main_controls.SetFont("c" label_colour " q3", label_font)
+main_controls.SetFont("s" label_size " c" label_colour " q3", label_font)
 random_seed_refiner_checkbox := main_controls.Add("CheckBox", "x" stored_gui_x + stored_gui_w + updown_default_w + updown_offset_x + gap_x " y0 Disabled", "Random Seed")
 main_controls.SetFont("s" text_size " c" text_colour " q0", text_font)
 ;get specific value
@@ -320,7 +328,7 @@ random_seed_refiner_checkbox.GetPos(,,, &random_seed_refiner_checkbox_h)
 random_seed_refiner_checkbox.Move(, stored_gui_y + stored_gui_h / 2 - random_seed_refiner_checkbox_h / 2,,)
 
 random_seed_refiner_checkbox.GetPos(&stored_gui_x, &stored_gui_y, &stored_gui_w, &stored_gui_h)
-main_controls.SetFont("c" label_colour " q3", label_font)
+main_controls.SetFont("s" label_size " c" label_colour " q3", label_font)
 refiner_conditioning_checkbox := main_controls.Add("CheckBox", "x" stored_gui_x + stored_gui_w + gap_x " y" stored_gui_y " Disabled", "Conditioning")
 main_controls.SetFont("s" text_size " c" text_colour " q0", text_font)
 
@@ -504,7 +512,7 @@ mask_feather_edit := mask_and_controlnet.Add("Edit", "x" stored_gui_x + stored_g
 mask_feather_updown := mask_and_controlnet.Add("UpDown", "Range0-8192 0x80", 0)
 
 mask_grow_edit.GetPos(&stored_gui_x, &stored_gui_y, &stored_gui_w, &stored_gui_h)
-mask_and_controlnet.SetFont("c" label_colour " q3", label_font)
+mask_and_controlnet.SetFont("s" label_size " c" label_colour " q3", label_font)
 inpainting_checkpoint_checkbox := mask_and_controlnet.Add("CheckBox", "x" stored_gui_x " y" stored_gui_y + stored_gui_h + gap_y, "Inpainting Checkpoint")
 mask_and_controlnet.SetFont("s" text_size " c" text_colour " q0", text_font)
 
@@ -597,14 +605,14 @@ output_viewer.SetFont("s" text_size " c" text_colour " q0", text_font)
 output_picture := output_viewer.Add("Picture", "x0 y0 w240 h240", "stuff\placeholder_pixel.bmp")
 
 output_picture.GetPos(&stored_gui_x, &stored_gui_y, &stored_gui_w, &stored_gui_h)
-output_listview := output_viewer.Add("ListView", "x" stored_gui_x " y" stored_gui_y + stored_gui_h + 1 " w" stored_gui_w " h" A_ScreenHeight / 3 " Background" control_colour " -Multi SortDesc Count50", ["File Name", "Output Images"])
+output_listview := output_viewer.Add("ListView", "x" stored_gui_x " y" stored_gui_y + stored_gui_h + 1 " w" stored_gui_w " h" A_ScreenHeight / 3 " Background" control_colour " -Multi Count50", ["File Name", "Output Images"])
 
 output_listview.Opt("-Redraw")
 Loop 50 {
   output_listview.Add(,"")
 }
 output_listview.ModifyCol(1, 0)
-output_listview.ModifyCol(2, "Integer Left AutoHdr")
+output_listview.ModifyCol(2, "AutoHdr")
 output_listview.Delete()
 output_listview.Opt("+Redraw")
 
@@ -642,8 +650,8 @@ status_box.SetFont("s" text_size " c" text_colour " q0", text_font)
 main_controls.Show("Hide")
 WinGetPos ,, &main_controls_w, &main_controls_h, main_controls.Hwnd
 
-status_box.SetFont("s" text_size " c" label_colour " q3", label_font)
-status_text := status_box.Add("Text", "x0 y0 w" A_ScreenWidth - gap_y - main_controls_w - screen_border_x " r15 Center")
+status_box.SetFont("s" status_size " c" status_colour " q3", status_font)
+status_text := status_box.Add("Text", "x0 y0 w" A_ScreenWidth - gap_y - main_controls_w - screen_border_x " r" status_rows " Center")
 status_box.SetFont("s" text_size " c" text_colour " q0", text_font)
 
 ;--------------------------------------------------
@@ -2883,7 +2891,7 @@ horde_clip_skip_updown := horde_main_controls.Add("UpDown", "Range0-" horde_clip
 
 ;horde karras
 horde_clip_skip_edit.GetPos(&stored_gui_x, &stored_gui_y, &stored_gui_w, &stored_gui_h)
-horde_main_controls.SetFont("c" label_colour " q3", label_font)
+horde_main_controls.SetFont("s" label_size " c" label_colour " q3", label_font)
 horde_karras_checkbox := horde_main_controls.Add("CheckBox", "x" stored_gui_x + stored_gui_w + updown_default_w + updown_offset_x + gap_x " y0 Checked", "Karras")
 horde_main_controls.SetFont("s" text_size " c" text_colour " q0", text_font)
 ;get specific value
@@ -2892,14 +2900,14 @@ horde_karras_checkbox.Move(, stored_gui_y + stored_gui_h / 2 - horde_karras_chec
 
 ;horde hires fix
 horde_karras_checkbox.GetPos(&stored_gui_x, &stored_gui_y, &stored_gui_w, &stored_gui_h)
-horde_main_controls.SetFont("c" label_colour " q3", label_font)
+horde_main_controls.SetFont("s" label_size " c" label_colour " q3", label_font)
 horde_hires_fix_checkbox := horde_main_controls.Add("CheckBox", "x" stored_gui_x + stored_gui_w + gap_x " y" stored_gui_y, "Hires Fix")
 horde_main_controls.SetFont("s" text_size " c" text_colour " q0", text_font)
 
 ;horde tiling
 horde_hires_fix_checkbox.GetPos(&stored_gui_x, &stored_gui_y, &stored_gui_w, &stored_gui_h)
-horde_main_controls.SetFont("c" label_colour " q3", label_font)
-horde_tiling_checkbox := horde_main_controls.Add("CheckBox", "x" stored_gui_x + stored_gui_w + gap_x " y" stored_gui_y " Disabled", "Tiling")
+horde_main_controls.SetFont("s" label_size " c" label_colour " q3", label_font)
+horde_tiling_checkbox := horde_main_controls.Add("CheckBox", "x" stored_gui_x + stored_gui_w + gap_x " y" stored_gui_y, "Tiling")
 horde_main_controls.SetFont("s" text_size " c" text_colour " q0", text_font)
 
 ;horde prompt (positive)
@@ -2917,14 +2925,14 @@ horde_seed_updown := horde_main_controls.Add("UpDown", "Range0-1 0x80 -2")
 
 ;horde random seed
 horde_seed_edit.GetPos(&stored_gui_x, &stored_gui_y, &stored_gui_w, &stored_gui_h)
-horde_main_controls.SetFont("c" label_colour " q3", label_font)
+horde_main_controls.SetFont("s" label_size " c" label_colour " q3", label_font)
 horde_random_seed_checkbox := horde_main_controls.Add("CheckBox", "x" stored_gui_x " y" stored_gui_y + stored_gui_h + 1, "Random")
 horde_main_controls.SetFont("s" text_size " c" text_colour " q0", text_font)
 
 ;horde seed variation
 horde_seed_edit.GetPos(&stored_gui_x, &stored_gui_y, &stored_gui_w, &stored_gui_h)
-horde_seed_variation_edit := horde_main_controls.Add("Edit", "x" stored_gui_x + stored_gui_w + updown_default_w + updown_offset_x + 1 " y" stored_gui_y " w75 r1 Background" control_colour " Center Number Limit5 Hidden")
-horde_seed_variation_updown := horde_main_controls.Add("UpDown", "Range0-" horde_seed_variation_values["maximum"] " 0x80 Hidden", 0)
+horde_seed_variation_edit := horde_main_controls.Add("Edit", "x" stored_gui_x + stored_gui_w + updown_default_w + updown_offset_x + 1 " y" stored_gui_y " w75 r1 Background" control_colour " Center Number Limit5")
+horde_seed_variation_updown := horde_main_controls.Add("UpDown", "Range0-" horde_seed_variation_values["maximum"] " 0x80", 0)
 
 ;horde steps
 horde_prompt_negative_edit.GetPos(&stored_gui_x, &stored_gui_y, &stored_gui_w, &stored_gui_h)
@@ -3126,24 +3134,19 @@ horde_generate.SetFont("s" text_size " c" text_colour " q0", text_font)
 
 ;horde job list
 ;--------------------------------------------------
-horde_generation_status_listview := horde_generate.Add("ListView", "x0 y0 w" A_ScreenWidth / 5 * 2 " r20 Background" control_colour " -Multi", ["ID", "Finished", "Processing", "Restarted", "Waiting", "Done", "Faulted", "ETA", "Queue", "Kudos", "Possible", "Status"])
+horde_generation_status_listview := horde_generate.Add("ListView", "x0 y0 w" A_ScreenWidth / 5 * 2 " r20 Background" control_colour " -Multi", ["ID", "Waiting", "Processing", "Finished", "ETA", "Queue", "Status"])
 
 horde_generation_status_listview.GetPos(&stored_gui_x, &stored_gui_y, &stored_gui_w, &stored_gui_h)
 Loop 21 {
   horde_generation_status_listview.Add(,"")
 }
-horde_generation_status_listview.ModifyCol(1, A_ScreenWidth / 5)
-horde_generation_status_listview.ModifyCol(2, "0  Integer")
-horde_generation_status_listview.ModifyCol(3, "0 Integer")
-horde_generation_status_listview.ModifyCol(4, "0 Integer")
-horde_generation_status_listview.ModifyCol(5, "0 Integer")
-horde_generation_status_listview.ModifyCol(6, "0 Integer")
-horde_generation_status_listview.ModifyCol(7, "0 Integer")
-horde_generation_status_listview.ModifyCol(8, "75 Integer")
-horde_generation_status_listview.ModifyCol(9, "75 Integer")
-horde_generation_status_listview.ModifyCol(10, "0 Integer")
-horde_generation_status_listview.ModifyCol(11, "0 Integer")
-horde_generation_status_listview.ModifyCol(12, "AutoHdr")
+horde_generation_status_listview.ModifyCol(1, A_ScreenWidth / 6)
+horde_generation_status_listview.ModifyCol(2, "50  Integer")
+horde_generation_status_listview.ModifyCol(3, "50 Integer")
+horde_generation_status_listview.ModifyCol(4, "50 Integer")
+horde_generation_status_listview.ModifyCol(5, "75 Integer")
+horde_generation_status_listview.ModifyCol(6, "75 Integer")
+horde_generation_status_listview.ModifyCol(7, "AutoHdr")
 horde_generation_status_listview.Delete
 
 horde_generate.SetFont("s" label_size " c" label_colour " q3", label_font)
@@ -3173,14 +3176,14 @@ horde_output_picture := horde_output_viewer.Add("Picture", "x0 y0 w240 h240", "s
 ;horde output list
 ;--------------------------------------------------
 horde_output_picture.GetPos(&stored_gui_x, &stored_gui_y, &stored_gui_w, &stored_gui_h)
-horde_output_listview := horde_output_viewer.Add("ListView", "x" stored_gui_x " y" stored_gui_y + stored_gui_h + 1 " w" stored_gui_w " h" A_ScreenHeight / 3 " Background" control_colour " -Multi SortDesc Count50", ["File Name", "Output Images"])
+horde_output_listview := horde_output_viewer.Add("ListView", "x" stored_gui_x " y" stored_gui_y + stored_gui_h + 1 " w" stored_gui_w " h" A_ScreenHeight / 3 " Background" control_colour " -Multi Count50", ["File Name", "Output Images"])
 
 horde_output_listview.Opt("-Redraw")
 Loop 50 {
   horde_output_listview.Add(,"")
 }
 horde_output_listview.ModifyCol(1, 0)
-horde_output_listview.ModifyCol(2, "Integer Left AutoHdr")
+horde_output_listview.ModifyCol(2, "AutoHdr")
 horde_output_listview.Delete()
 horde_output_listview.Opt("+Redraw")
 
@@ -3248,8 +3251,8 @@ if (show_labels) {
   horde_seed_edit.GetPos(&stored_gui_x, &stored_gui_y, &stored_gui_w, &stored_gui_h)
   horde_seed_label := horde_main_controls.Add("Text", "x" stored_gui_x " y" stored_gui_y - label_h , "Seed")
 
-  ;horde_seed_variation_edit.GetPos(&stored_gui_x, &stored_gui_y, &stored_gui_w, &stored_gui_h)
-  ;horde_seed_variation_label := horde_main_controls.Add("Text", "x" stored_gui_x " y" stored_gui_y - label_h , "Variation")
+  horde_seed_variation_edit.GetPos(&stored_gui_x, &stored_gui_y, &stored_gui_w, &stored_gui_h)
+  horde_seed_variation_label := horde_main_controls.Add("Text", "x" stored_gui_x " y" stored_gui_y - label_h , "Variation")
 
   horde_step_count_edit.GetPos(&stored_gui_x, &stored_gui_y, &stored_gui_w, &stored_gui_h)
   horde_step_count_label := horde_main_controls.Add("Text", "x" stored_gui_x " y" stored_gui_y - label_h , "Steps")
@@ -3411,11 +3414,19 @@ horde_random_seed_checkbox_click(GuiCtrlObj, Info) {
     horde_seed_edit.Opt("+ReadOnly")
     horde_seed_updown.Enabled := 0
     horde_seed_edit.SetFont("c" control_colour)
+
+    horde_seed_variation_edit.Opt("+ReadOnly")
+    horde_seed_variation_updown.Enabled := 0
+    horde_seed_variation_edit.SetFont("c" control_colour)
   }
   else {
     horde_seed_edit.Opt("-ReadOnly")
     horde_seed_updown.Enabled := 1
     horde_seed_edit.SetFont("c" text_colour)
+
+    horde_seed_variation_edit.Opt("-ReadOnly")
+    horde_seed_variation_updown.Enabled := 1
+    horde_seed_variation_edit.SetFont("c" text_colour)
   }
 }
 
@@ -4115,7 +4126,7 @@ horde_generation_status_listview_menu_cancel_job(ItemName, ItemPos, MyMenu) {
 ;--------------------------------------------------
 horde_generation_status_listview_menu_clear_finished_jobs(ItemName, ItemPos, MyMenu) {
   while (A_Index <= horde_generation_status_listview.GetCount()) {
-    if (horde_generation_status_listview.GetText(A_Index, 6) = 1 or horde_generation_status_listview.GetText(A_Index, 12) = "Not Found") {
+    if (horde_generation_status_listview.GetText(A_Index, 7) = "Done" or horde_generation_status_listview.GetText(A_Index, 7) = "Not Found") {
       horde_generation_status_listview.Delete(A_Index)
       A_Index -= 1
     }
@@ -4364,7 +4375,7 @@ gui_windows["comfy"] := Map(
   ,"controlnet_preprocessor_options", Map(
     "gui_window", controlnet_preprocessor_options
     ,"x", screen_border_x + controlnet_preprocessor_options_start_x
-    ,"y", screen_border_y + controlnet_preprocessor_options_start_y
+    ,"y", screen_border_y + workspace_selection_h + controlnet_preprocessor_options_start_y
   )
   ,"output_viewer", Map(
     "gui_window", output_viewer
@@ -5273,26 +5284,14 @@ diffusion_time(*) {
   change_status("painting")
 
   ;upload all input images first
-  server_image_files := Map()
-  try {
-    for (picture, image_file in inputs) {
-      altar.Open("POST", "http://" server_address "/upload/image", false)
-      objParam := {overwrite: "true", image: [image_file], subfolder: "fluff"}
-      CreateFormData(&offering, &hdr_ContentType, objParam)
-      altar.SetRequestHeader("Content-Type", hdr_ContentType)
-      altar.Send(offering)
-      response := altar.ResponseText
-      status_text.Text := FormatTime() "`nhttp://" server_address "/upload/image`n" altar.Status ": " altar.StatusText
-
-      inspiration := Jxon_load(&response)
-      if (inspiration.Has("subfolder") and inspiration.Has("name")) {
-        server_image_files[picture] := inspiration["subfolder"] "\" inspiration["name"]
-      }
+  if (inputs.Count) {
+    try {
+      server_image_files := upload_images(inputs, "fluffy-assistant")
     }
-  }
-  catch Error as what_went_wrong {
-    oh_no(what_went_wrong)
-    return
+    catch Error as what_went_wrong {
+      oh_no(what_went_wrong)
+      return
+    }
   }
 
   dream := FileRead("workflows\main_api.json")
@@ -5924,7 +5923,8 @@ diffusion_time(*) {
   }
 
   ;saving
-  generation_time := thought["save_image"]["inputs"]["filename_prefix"] := A_Now
+  generation_time := A_Now
+  thought["save_image"]["inputs"]["filename_prefix"] := "fluffy-assistant\" generation_time
 
   prayer := Jxon_dump(Map("prompt", thought, "client_id", client_id))
 
@@ -6025,38 +6025,24 @@ preview_sidejob(picture_frame) {
     thought["mask_feather"]["inputs"]["left"] := thought["mask_feather"]["inputs"]["top"] := thought["mask_feather"]["inputs"]["right"] := thought["mask_feather"]["inputs"]["bottom"] := mask_feather_edit.Value
   }
 
-  ;upload image
-  server_image_files := Map()
+  ;upload image(s)
   if (preview_pictures_to_upload.Count) {
-    for (picture, image_file in preview_pictures_to_upload) {
-      try {
-        altar.Open("POST", "http://" server_address "/upload/image", false)
-        objParam := {overwrite: "true", image: [image_file], subfolder: "fluff"}
-        CreateFormData(&offering, &hdr_ContentType, objParam)
-        altar.SetRequestHeader("Content-Type", hdr_ContentType)
-        altar.Send(offering)
-
-        response := altar.ResponseText
-        status_text.Text := FormatTime() "`nhttp://" server_address "/upload/image`n" altar.Status ": " altar.StatusText
-        inspiration := Jxon_load(&response)
-        if (inspiration.Has("subfolder") and inspiration.Has("name")) {
-          server_image_files[picture "_preview"] := inspiration["subfolder"] "\" inspiration["name"]
-        }
-      }
-      catch Error as what_went_wrong {
-        oh_no(what_went_wrong)
-        return
-      }
+    try {
+      server_image_files := upload_images(preview_pictures_to_upload, "fluffy-assistant")
+    }
+    catch Error as what_went_wrong {
+      oh_no(what_went_wrong)
+      return
     }
   }
 
-  if (server_image_files.Has("mask_preview")) {
-    thought["mask_image_loader"]["inputs"]["image"] := server_image_files["mask_preview"]
-    thought["save_image"]["inputs"]["filename_prefix"] := "mask_preview"
+  if (server_image_files.Has("mask")) {
+    thought["mask_image_loader"]["inputs"]["image"] := server_image_files["mask"]
+    thought["save_image"]["inputs"]["filename_prefix"] := "fluffy-assistant\previews\mask_preview"
   }
-  if (server_image_files.Has("controlnet_preview")) {
-    thought["controlnet_image_loader"]["inputs"]["image"] := server_image_files["controlnet_preview"]
-    thought["save_image"]["inputs"]["filename_prefix"] := "controlnet_preview"
+  if (server_image_files.Has("controlnet")) {
+    thought["controlnet_image_loader"]["inputs"]["image"] := server_image_files["controlnet"]
+    thought["save_image"]["inputs"]["filename_prefix"] := "fluffy-assistant\previews\controlnet_preview"
   }
 
   prayer := Jxon_dump(Map("prompt", thought, "client_id", client_id))
@@ -6081,6 +6067,57 @@ preview_sidejob(picture_frame) {
   }
 }
 
+;upload input or preview images
+;--------------------------------------------------
+upload_images(files, subfolder := "fluffy-assistant") {
+  server_image_files := Map()
+  for (picture, image_file in files) {
+    altar.Open("POST", "http://" server_address "/upload/image", false)
+
+    memory_handle := DllCall("GlobalAlloc", "UInt", 0x0002, "UPtr", 0, "Ptr")
+    DllCall("ole32\CreateStreamOnHGlobal", "Ptr", memory_handle, "Int", False, "Ptr*", &ppstm_string := 0, "UInt")
+
+    image_content := "--@__________@`r`nContent-Disposition: form-data; name=`"image`"; filename=`"" image_file "`"`r`nContent-Type: application/octet-stream`r`n`r`n"
+    buffer_object := Buffer(StrPut(image_content, "utf-8") - 1)
+    StrPut(image_content, buffer_object, buffer_object.Size, "utf-8")
+    DllCall("shlwapi\IStream_Write", "Ptr", ppstm_string, "Ptr", buffer_object.Ptr, "UInt", buffer_object.Size, "UInt")
+
+    DllCall("shlwapi\SHCreateStreamOnFileEx", "WStr", image_file, "UInt", 0, "UInt", 0x80, "Int", False, "Ptr", 0, "Ptr*", &ppstm_file := 0, "UInt")
+    DllCall("shlwapi\IStream_Size", "Ptr", ppstm_file, "UInt64*", &size := 0, "UInt")
+    DllCall("shlwapi\IStream_Copy", "Ptr", ppstm_file , "Ptr", ppstm_string, "UInt", size, "UInt")
+
+    ObjRelease(ppstm_file)
+
+    params := "`r`n--@__________@`r`nContent-Disposition: form-data; name=`"overwrite`"`r`n`r`ntrue`r`n--@__________@`r`nContent-Disposition: form-data; name=`"subfolder`"`r`n`r`n" subfolder "`r`n--@__________@--"
+    buffer_object := Buffer(StrPut(params, "utf-8") - 1)
+    StrPut(params, buffer_object, buffer_object.Size, "utf-8")
+    DllCall("shlwapi\IStream_Write", "Ptr", ppstm_string, "Ptr", buffer_object.Ptr, "UInt", buffer_object.Size, "UInt")
+
+    ObjRelease(ppstm_string)
+
+    locked_mem_pointer := DllCall("GlobalLock", "Ptr", memory_handle, "Ptr")
+    locked_mem_pointer_size := DllCall("GlobalSize", "Ptr", locked_mem_pointer, "UPtr")
+
+    offering := ComObjArray(0x11, locked_mem_pointer_size)
+    DllCall("RtlMoveMemory", "Ptr", NumGet(ComObjValue(offering), 8 + A_PtrSize, "ptr"), "Ptr", locked_mem_pointer, "Ptr", locked_mem_pointer_size)
+
+    DllCall("GlobalUnlock", "Ptr", memory_handle)
+    DllCall("GlobalFree", "Ptr", memory_handle, "Ptr")
+
+    altar.SetRequestHeader("Content-Type", "multipart/form-data; boundary=@__________@")
+    altar.Send(offering)
+
+    response := altar.ResponseText
+    status_text.Text := FormatTime() "`nhttp://" server_address "/upload/image`n" altar.Status ": " altar.StatusText
+
+    inspiration := Jxon_load(&response)
+    if (inspiration.Has("subfolder") and inspiration.Has("name")) {
+      server_image_files[picture] := inspiration["subfolder"] "\" inspiration["name"]
+    }
+  }
+  return server_image_files
+}
+
 ;attempt to download all images for which a download hasn't been attempted yet
 ;should only happen after generation is finished or failed
 ;--------------------------------------------------
@@ -6097,7 +6134,7 @@ download_images() {
         for (output_image in history[prompt_id]["outputs"]["save_image"]["images"]) {
           url_values := "filename=" LC_UriEncode(output_image["filename"]) "&subfolder=" LC_UriEncode(output_image["subfolder"]) "&type=" LC_UriEncode(output_image["type"])
           Download "http://" server_address "/view?" url_values, output_folder output_image["filename"]
-          output_listview.Add(,output_image["filename"], FormatTime(time, "[HH:mm:ss]") " " Format("{:05u}", A_Index))
+          output_listview.Insert(1,, output_image["filename"], FormatTime(time, "[HH:mm:ss]") " " Format("{:05u}", A_Index))
         }
         output_listview.Opt("+Redraw")
         if (output_listview.GetCount()) {
@@ -6420,15 +6457,15 @@ summon_the_horde(*) {
     horde_thought["params"]["sampler_name"] := horde_sampler_combobox.Text
     horde_thought["params"]["cfg_scale"] := horde_cfg_edit.Value + 0
     horde_thought["params"]["denoising_strength"] := horde_denoise_edit.Value + 0
-    ;if (horde_random_seed_checkbox.Value) {
-    ;  horde_seed_edit.Text := horde_thought["params"]["seed"] := Random(0x7FFFFFFFFFFFFFFF) ""
-    ;}
-    ;else {
-    ;  horde_thought["params"]["seed"] := horde_seed_edit.Text ""
-    ;}
+    if (horde_random_seed_checkbox.Value) {
+      horde_thought["params"]["seed"] := ""
+    }
+    else {
+      horde_thought["params"]["seed"] := horde_seed_edit.Text ""
+      horde_thought["params"]["seed_variation"] := horde_seed_variation_edit.Value + 0
+    }
     horde_thought["params"]["height"] := horde_image_height_edit.Value + 0
     horde_thought["params"]["width"] := horde_image_width_edit.Value + 0
-    ;horde_thought["params"]["seed_variation"] := horde_seed_variation_edit.Value + 0
     if (next_post := horde_post_process_active_listview.GetNext(0, "C")) {
       horde_thought["params"]["post_processing"] := [horde_post_process_active_listview.GetText(next_post, 1)]
       while (next_post := horde_post_process_active_listview.GetNext(next_post, "C")) {
@@ -6486,9 +6523,7 @@ summon_the_horde(*) {
     }
 
     horde_thought["params"]["steps"] := horde_step_count_edit.Value + 0
-    ;horde_thought["params"]["n"] := horde_batch_size_edit.Value + 0
-    horde_thought["params"]["n"] := 1
-
+    horde_thought["params"]["n"] := horde_batch_size_edit.Value + 0
 
     horde_thought["nsfw"] := horde_allow_nsfw_checkbox.Value ? "true" : "false"
     horde_thought["trusted_workers"] := horde_allow_untrusted_workers_checkbox.Value ? "false" : "true"
@@ -6523,78 +6558,52 @@ summon_the_horde(*) {
     horde_thought["replacement_filter"] := horde_replacement_filter_checkbox.Value ? "true" : "false"
     horde_thought["dry_run"] := "false"
 
-    ;sidestep issues with seed variation and n
-    ;using a loop to send batches of 1
-    if (IsInteger(horde_seed_edit.Text) and horde_seed_edit.Text >= 0 and horde_seed_edit.Text + horde_batch_size_edit.Value - 1 <= 4294967295) {
-      seed_treatment := "int"
-    }
-    else {
-      seed_treatment := "str"
-    }
-    loop horde_batch_size_edit.Value {
-      if (horde_random_seed_checkbox.Value) {
-        horde_seed_edit.Text := horde_thought["params"]["seed"] := Random(4294967295) ""
-      }
-      else {
-        if (A_Index = 1) {
-          base_seed := horde_thought["params"]["seed"] := horde_seed_edit.Text
+    horde_prayer := Jxon_dump(horde_thought)
+    altar.Open("POST", "https://" horde_address "/api/v2/generate/async", false)
+    altar.SetRequestHeader("accept", "application/json")
+    altar.SetRequestHeader("apikey", horde_api_key)
+    altar.SetRequestHeader("Content-Type", "application/json")
+    altar.Send(horde_prayer)
+
+    response := altar.ResponseText
+    horde_vision := Jxon_load(&response)
+    message_to_display := FormatTime() "`nhttps://" horde_address "/api/v2/generate/async`n" altar.Status ": " altar.StatusText
+    if (altar.Status = 202) {
+      message_to_display .= "`n" horde_vision["id"]
+      try {
+        DetectHiddenWindows True
+        if (!WinExist(horde_assistant_script " ahk_class AutoHotkey")) {
+          Run horde_assistant_script " " A_ScriptName " " horde_address " horde_job " horde_vision["id"]
         }
         else {
-          if (seed_treatment = "int") {
-            horde_thought["params"]["seed"] := base_seed + A_Index - 1 . ""
-          }
-          else if (seed_treatment = "str") {
-            horde_thought["params"]["seed"] := base_seed " " A_Index - 1
+          con_struct_ion := string_to_message(Jxon_dump([A_ScriptName, horde_address, "horde_job", horde_vision["id"]]))
+          response_value := SendMessage(0x004A, 0, con_struct_ion)
+        }
+        horde_generation_status_listview.Add(,horde_vision["id"],,,,,, "Request Received")
+        ;remove image files in order to save history
+        horde_thought_for_history :=  horde_thought.Clone()
+        if (horde_thought_for_history.Has("source_image")) {
+          horde_thought_for_history["source_image"] := "redacted for brevity"
+          if (horde_thought_for_history.Has("source_mask")) {
+            horde_thought_for_history["source_mask"] := "redacted for brevity"
           }
         }
+        IniWrite(Jxon_dump(horde_thought_for_history), horde_output_folder "history.ini", horde_vision["id"], "Request")
       }
-      horde_prayer := Jxon_dump(horde_thought)
-      altar.Open("POST", "https://" horde_address "/api/v2/generate/async", false)
-      altar.SetRequestHeader("accept", "application/json")
-      altar.SetRequestHeader("apikey", horde_api_key)
-      altar.SetRequestHeader("Content-Type", "application/json")
-      altar.Send(horde_prayer)
-
-      response := altar.ResponseText
-      horde_vision := Jxon_load(&response)
-      message_to_display := FormatTime() "`nhttps://" horde_address "/api/v2/generate/async`n" altar.Status ": " altar.StatusText
-      if (altar.Status = 202) {
-        message_to_display .= "`n" horde_vision["id"]
-        try {
-          DetectHiddenWindows True
-          if (!WinExist(horde_assistant_script " ahk_class AutoHotkey")) {
-            Run horde_assistant_script " " A_ScriptName " " horde_address " horde_job " horde_vision["id"]
-          }
-          else {
-            con_struct_ion := string_to_message(Jxon_dump([A_ScriptName, horde_address, "horde_job", horde_vision["id"]]))
-            response_value := SendMessage(0x004A, 0, con_struct_ion)
-          }
-          horde_generation_status_listview.Add(,horde_vision["id"],,,,,,,,,,, "Request Received")
-          ;remove image files in order to save history
-          horde_thought_for_history :=  horde_thought.Clone()
-          if (horde_thought_for_history.Has("source_image")) {
-            horde_thought_for_history["source_image"] := "redacted for brevity"
-            if (horde_thought_for_history.Has("source_mask")) {
-              horde_thought_for_history["source_mask"] := "redacted for brevity"
-            }
-          }
-          IniWrite(Jxon_dump(horde_thought_for_history), horde_output_folder "history.ini", horde_vision["id"], "Request")
-        }
-        catch Error as what_went_wrong {
-          oh_no(what_went_wrong)
-        }
-        finally {
-          DetectHiddenWindows False
-        }
+      catch Error as what_went_wrong {
+        oh_no(what_went_wrong)
       }
-      else if (altar.Status != 200) {
-        FileAppend("[" A_Now "]`nhttps://" horde_address "/api/v2/generate/async`n" altar.Status ": " altar.StatusText "`n" response "`n", "log", "utf-8")
+      finally {
+        DetectHiddenWindows False
       }
-      if (horde_vision.Has("message")) {
-        message_to_display .= "`n" horde_vision["message"]
-      }
-      status_text.Text := message_to_display
     }
+    else if (altar.Status != 200) {
+      FileAppend("[" A_Now "]`nhttps://" horde_address "/api/v2/generate/async`n" altar.Status ": " altar.StatusText "`n" response "`n", "log", "utf-8")
+    }
+    if (horde_vision.Has("message")) {
+      message_to_display .= "`n" horde_vision["message"]
+    }
+    status_text.Text := message_to_display
     update_kudos()
   }
   catch Error as what_went_wrong {
@@ -6612,13 +6621,12 @@ horde_download_image(prompt_id) {
     status_text.Text := FormatTime() "`nhttps://" horde_address "/api/v2/generate/status/`n" prompt_id "`n" altar.Status ": " altar.StatusText
     history := Jxon_load(&response)
     if (history.Has("generations")) {
-      time := A_Now
       horde_output_listview.Opt("-Redraw")
       for (output_image in history["generations"]) {
-        destination_file_name := time "_" Format("{:05u}", A_Index) "_.webp"
+        destination_file_name := prompt_id "_" Format("{:05u}", A_Index) "_.webp"
         Download output_image["img"], horde_output_folder destination_file_name
-        horde_output_listview.Add(, destination_file_name, FormatTime(time, "[HH:mm:ss]") " " Format("{:05u}", A_Index))
-        IniWrite(output_image["id"] " - Worker: " output_image["worker_name"] " (" output_image["worker_id"] ")", horde_output_folder "history.ini", prompt_id, destination_file_name " ")
+        horde_output_listview.Insert(1,, destination_file_name, "[" SubStr(prompt_id, 1, 8) "] " Format("{:05u}", A_Index))
+        IniWrite("ID: " output_image["id"] ", Seed: " output_image["seed"] ", Worker: " output_image["worker_name"] " (" output_image["worker_id"] ")", horde_output_folder "history.ini", prompt_id, destination_file_name)
       }
       horde_output_listview.Opt("+Redraw")
       if (horde_output_listview.GetCount()) {
@@ -6732,8 +6740,8 @@ save_state(workspace_folder, slot_id) {
         "`nhorde_prompt_positive=" horde_prompt_positive_edit.Text
         "`nhorde_prompt_negative=" horde_prompt_negative_edit.Text
         "`nhorde_seed=" horde_seed_edit.Text
-        "`nhorde_random_seed=" horde_random_seed_checkbox.Value
         "`nhorde_seed_variation=" horde_seed_variation_edit.Value
+        "`nhorde_random_seed=" horde_random_seed_checkbox.Value
         "`nhorde_step_count=" horde_step_count_edit.Value
         "`nhorde_cfg=" horde_cfg_edit.Value
         "`nhorde_denoise=" horde_denoise_edit.Value
@@ -6926,9 +6934,9 @@ load_state(workspace_folder, slot_id) {
       horde_prompt_positive_edit.Text := IniRead(workspace_folder slot_id ".ini", "save", "horde_prompt_positive", horde_prompt_positive_edit.Text)
       horde_prompt_negative_edit.Text := IniRead(workspace_folder slot_id ".ini", "save", "horde_prompt_negative", horde_prompt_negative_edit.Text)
       horde_seed_edit.Text := IniRead(workspace_folder slot_id ".ini", "save", "horde_seed", horde_seed_edit.Text)
+      horde_seed_variation_edit.Value := IniRead(workspace_folder slot_id ".ini", "save", "horde_seed_variation", horde_seed_variation_edit.Value)
       horde_random_seed_checkbox.Value := IniRead(workspace_folder slot_id ".ini", "save", "horde_random_seed", horde_random_seed_checkbox.Value)
       horde_random_seed_checkbox_click(horde_random_seed_checkbox, "")
-      horde_seed_variation_edit.Value := IniRead(workspace_folder slot_id ".ini", "save", "horde_seed_variation", horde_seed_variation_edit.Value)
       horde_step_count_edit.Value := IniRead(workspace_folder slot_id ".ini", "save", "horde_step_count", horde_step_count_edit.Value)
       horde_cfg_edit.Value := IniRead(workspace_folder slot_id ".ini", "save", "horde_cfg", horde_cfg_edit.Value)
       horde_denoise_edit.Value := IniRead(workspace_folder slot_id ".ini", "save", "horde_denoise", horde_denoise_edit.Value)
@@ -7053,7 +7061,7 @@ message_receive(wParam, lParam, msg, hwnd) {
           not_found_prompt_id := SubStr(horde_string, 20)
           status_text.Text := FormatTime() "`n" not_found_prompt_id "`nPrompt ID not found or expired."
           if (existing_job_entry := listview_search(horde_generation_status_listview, not_found_prompt_id)) {
-            horde_generation_status_listview.Modify(existing_job_entry,,,,,,,,,,,,, "Not Found")
+            horde_generation_status_listview.Modify(existing_job_entry,,,,,, "Not Found")
           }
           return 1
         case (Instr(horde_string, "horde_progress") = 1):
@@ -7072,10 +7080,10 @@ message_receive(wParam, lParam, msg, hwnd) {
             simple_status_readout := "OK"
           }
           if (existing_job_entry := listview_search(horde_generation_status_listview, horde_progress_update["prompt_id"])) {
-            horde_generation_status_listview.Modify(existing_job_entry,,, horde_progress_update["actual_server_response"]["finished"], horde_progress_update["actual_server_response"]["processing"], horde_progress_update["actual_server_response"]["restarted"], horde_progress_update["actual_server_response"]["waiting"], horde_progress_update["actual_server_response"]["done"], horde_progress_update["actual_server_response"]["faulted"], horde_progress_update["actual_server_response"]["wait_time"], horde_progress_update["actual_server_response"]["queue_position"], horde_progress_update["actual_server_response"]["kudos"], horde_progress_update["actual_server_response"]["is_possible"], simple_status_readout)
+            horde_generation_status_listview.Modify(existing_job_entry,,, horde_progress_update["actual_server_response"]["waiting"], horde_progress_update["actual_server_response"]["processing"], horde_progress_update["actual_server_response"]["finished"], horde_progress_update["actual_server_response"]["wait_time"], horde_progress_update["actual_server_response"]["queue_position"], simple_status_readout)
           }
           else {
-            horde_generation_status_listview.Add(,horde_progress_update["prompt_id"], horde_progress_update["actual_server_response"]["finished"], horde_progress_update["actual_server_response"]["processing"], horde_progress_update["actual_server_response"]["restarted"], horde_progress_update["actual_server_response"]["waiting"], horde_progress_update["actual_server_response"]["done"], horde_progress_update["actual_server_response"]["faulted"], horde_progress_update["actual_server_response"]["wait_time"], horde_progress_update["actual_server_response"]["queue_position"], horde_progress_update["actual_server_response"]["kudos"], horde_progress_update["actual_server_response"]["is_possible"], simple_status_readout)
+            horde_generation_status_listview.Add(,horde_progress_update["prompt_id"], horde_progress_update["actual_server_response"]["waiting"], horde_progress_update["actual_server_response"]["processing"], horde_progress_update["actual_server_response"]["finished"], horde_progress_update["actual_server_response"]["wait_time"], horde_progress_update["actual_server_response"]["queue_position"], simple_status_readout)
           }
           return 1
         ;default:
