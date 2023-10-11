@@ -2,7 +2,6 @@
 #SingleInstance Force
 #Include <_JXON>
 #Include <Gdip_All>
-#Include <CreateFormData>
 #Include <LC_UriEncode>
 
 ;--------------------------------------------------
@@ -5285,26 +5284,14 @@ diffusion_time(*) {
   change_status("painting")
 
   ;upload all input images first
-  server_image_files := Map()
-  try {
-    for (picture, image_file in inputs) {
-      altar.Open("POST", "http://" server_address "/upload/image", false)
-      objParam := {overwrite: "true", image: [image_file], subfolder: "fluff"}
-      CreateFormData(&offering, &hdr_ContentType, objParam)
-      altar.SetRequestHeader("Content-Type", hdr_ContentType)
-      altar.Send(offering)
-      response := altar.ResponseText
-      status_text.Text := FormatTime() "`nhttp://" server_address "/upload/image`n" altar.Status ": " altar.StatusText
-
-      inspiration := Jxon_load(&response)
-      if (inspiration.Has("subfolder") and inspiration.Has("name")) {
-        server_image_files[picture] := inspiration["subfolder"] "\" inspiration["name"]
-      }
+  if (inputs.Count) {
+    try {
+      server_image_files := upload_images(inputs, "fluffy-assistant")
     }
-  }
-  catch Error as what_went_wrong {
-    oh_no(what_went_wrong)
-    return
+    catch Error as what_went_wrong {
+      oh_no(what_went_wrong)
+      return
+    }
   }
 
   dream := FileRead("workflows\main_api.json")
@@ -5936,7 +5923,8 @@ diffusion_time(*) {
   }
 
   ;saving
-  generation_time := thought["save_image"]["inputs"]["filename_prefix"] := A_Now
+  A_Clipboard := generation_time := A_Now
+  thought["save_image"]["inputs"]["filename_prefix"] := "fluffy-assistant\" generation_time
 
   prayer := Jxon_dump(Map("prompt", thought, "client_id", client_id))
 
@@ -6037,38 +6025,24 @@ preview_sidejob(picture_frame) {
     thought["mask_feather"]["inputs"]["left"] := thought["mask_feather"]["inputs"]["top"] := thought["mask_feather"]["inputs"]["right"] := thought["mask_feather"]["inputs"]["bottom"] := mask_feather_edit.Value
   }
 
-  ;upload image
-  server_image_files := Map()
+  ;upload image(s)
   if (preview_pictures_to_upload.Count) {
-    for (picture, image_file in preview_pictures_to_upload) {
-      try {
-        altar.Open("POST", "http://" server_address "/upload/image", false)
-        objParam := {overwrite: "true", image: [image_file], subfolder: "fluff"}
-        CreateFormData(&offering, &hdr_ContentType, objParam)
-        altar.SetRequestHeader("Content-Type", hdr_ContentType)
-        altar.Send(offering)
-
-        response := altar.ResponseText
-        status_text.Text := FormatTime() "`nhttp://" server_address "/upload/image`n" altar.Status ": " altar.StatusText
-        inspiration := Jxon_load(&response)
-        if (inspiration.Has("subfolder") and inspiration.Has("name")) {
-          server_image_files[picture "_preview"] := inspiration["subfolder"] "\" inspiration["name"]
-        }
-      }
-      catch Error as what_went_wrong {
-        oh_no(what_went_wrong)
-        return
-      }
+    try {
+      server_image_files := upload_images(preview_pictures_to_upload, "fluffy-assistant")
+    }
+    catch Error as what_went_wrong {
+      oh_no(what_went_wrong)
+      return
     }
   }
 
-  if (server_image_files.Has("mask_preview")) {
-    thought["mask_image_loader"]["inputs"]["image"] := server_image_files["mask_preview"]
-    thought["save_image"]["inputs"]["filename_prefix"] := "mask_preview"
+  if (server_image_files.Has("mask")) {
+    thought["mask_image_loader"]["inputs"]["image"] := server_image_files["mask"]
+    thought["save_image"]["inputs"]["filename_prefix"] := "fluffy-assistant\previews\mask_preview"
   }
-  if (server_image_files.Has("controlnet_preview")) {
-    thought["controlnet_image_loader"]["inputs"]["image"] := server_image_files["controlnet_preview"]
-    thought["save_image"]["inputs"]["filename_prefix"] := "controlnet_preview"
+  if (server_image_files.Has("controlnet")) {
+    thought["controlnet_image_loader"]["inputs"]["image"] := server_image_files["controlnet"]
+    thought["save_image"]["inputs"]["filename_prefix"] := "fluffy-assistant\previews\controlnet_preview"
   }
 
   prayer := Jxon_dump(Map("prompt", thought, "client_id", client_id))
@@ -6091,6 +6065,57 @@ preview_sidejob(picture_frame) {
     oh_no(what_went_wrong)
     change_status("idle")
   }
+}
+
+;upload input or preview images
+;--------------------------------------------------
+upload_images(files, subfolder := "fluffy-assistant") {
+  server_image_files := Map()
+  for (picture, image_file in files) {
+    altar.Open("POST", "http://" server_address "/upload/image", false)
+
+    memory_handle := DllCall("GlobalAlloc", "UInt", 0x0002, "UPtr", 0, "Ptr")
+    DllCall("ole32\CreateStreamOnHGlobal", "Ptr", memory_handle, "Int", False, "Ptr*", &ppstm_string := 0, "UInt")
+
+    image_content := "--@__________@`r`nContent-Disposition: form-data; name=`"image`"; filename=`"" image_file "`"`r`nContent-Type: application/octet-stream`r`n`r`n"
+    buffer_object := Buffer(StrPut(image_content, "utf-8") - 1)
+    StrPut(image_content, buffer_object, buffer_object.Size, "utf-8")
+    DllCall("shlwapi\IStream_Write", "Ptr", ppstm_string, "Ptr", buffer_object.Ptr, "UInt", buffer_object.Size, "UInt")
+
+    DllCall("shlwapi\SHCreateStreamOnFileEx", "WStr", image_file, "UInt", 0, "UInt", 0x80, "Int", False, "Ptr", 0, "Ptr*", &ppstm_file := 0, "UInt")
+    DllCall("shlwapi\IStream_Size", "Ptr", ppstm_file, "UInt64*", &size := 0, "UInt")
+    DllCall("shlwapi\IStream_Copy", "Ptr", ppstm_file , "Ptr", ppstm_string, "UInt", size, "UInt")
+
+    ObjRelease(ppstm_file)
+
+    params := "`r`n--@__________@`r`nContent-Disposition: form-data; name=`"overwrite`"`r`n`r`ntrue`r`n--@__________@`r`nContent-Disposition: form-data; name=`"subfolder`"`r`n`r`n" subfolder "`r`n--@__________@--"
+    buffer_object := Buffer(StrPut(params, "utf-8") - 1)
+    StrPut(params, buffer_object, buffer_object.Size, "utf-8")
+    DllCall("shlwapi\IStream_Write", "Ptr", ppstm_string, "Ptr", buffer_object.Ptr, "UInt", buffer_object.Size, "UInt")
+
+    ObjRelease(ppstm_string)
+
+    locked_mem_pointer := DllCall("GlobalLock", "Ptr", memory_handle, "Ptr")
+    locked_mem_pointer_size := DllCall("GlobalSize", "Ptr", locked_mem_pointer, "UPtr")
+
+    offering := ComObjArray(0x11, locked_mem_pointer_size)
+    DllCall("RtlMoveMemory", "Ptr", NumGet(ComObjValue(offering), 8 + A_PtrSize, "ptr"), "Ptr", locked_mem_pointer, "Ptr", locked_mem_pointer_size)
+
+    DllCall("GlobalUnlock", "Ptr", memory_handle)
+    DllCall("GlobalFree", "Ptr", memory_handle, "Ptr")
+
+    altar.SetRequestHeader("Content-Type", "multipart/form-data; boundary=@__________@")
+    altar.Send(offering)
+
+    response := altar.ResponseText
+    status_text.Text := FormatTime() "`nhttp://" server_address "/upload/image`n" altar.Status ": " altar.StatusText
+
+    inspiration := Jxon_load(&response)
+    if (inspiration.Has("subfolder") and inspiration.Has("name")) {
+      server_image_files[picture] := inspiration["subfolder"] "\" inspiration["name"]
+    }
+  }
+  return server_image_files
 }
 
 ;attempt to download all images for which a download hasn't been attempted yet
