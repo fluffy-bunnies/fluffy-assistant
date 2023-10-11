@@ -5923,7 +5923,7 @@ diffusion_time(*) {
   }
 
   ;saving
-  A_Clipboard := generation_time := A_Now
+  generation_time := A_Now
   thought["save_image"]["inputs"]["filename_prefix"] := "fluffy-assistant\" generation_time
 
   prayer := Jxon_dump(Map("prompt", thought, "client_id", client_id))
