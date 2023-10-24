@@ -14,16 +14,16 @@ text_colour=0xB0B0B0
 
 show_labels=1
 label_font=Arial
-label_size=12
+label_size=9
 label_colour=0xE0E0E0
 
-status_rows=15
+status_rows=12
 status_font=Arial
-status_size=12
+status_size=9
 status_colour=0xE0E0E0
 
-gap_x=25
-gap_y=25
+gap_x=10
+gap_y=15
 screen_border_x=10
 screen_border_y=10
 
