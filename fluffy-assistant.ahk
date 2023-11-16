@@ -53,23 +53,23 @@ show_labels := IniRead("settings.ini", "settings", "show_labels", 1)
 ;blank means no, but show if unspecified
 label_font := IniRead("settings.ini", "settings", "label_font", "Arial")
 label_font := label_font = "" ? "Arial" : label_font
-label_size := IniRead("settings.ini", "settings", "label_size", 12)
-label_size := label_size = "" ? 12 : label_size
+label_size := IniRead("settings.ini", "settings", "label_size", 9)
+label_size := label_size = "" ? 9 : label_size
 label_colour := IniRead("settings.ini", "settings", "label_colour", "0xE0E0E0")
 label_colour := label_colour = "" ? "0xE0E0E0" : label_colour
-status_rows := IniRead("settings.ini", "settings", "status_rows", 15)
-status_rows := status_rows = "" ? 15 : status_rows
+status_rows := IniRead("settings.ini", "settings", "status_rows", 12)
+status_rows := status_rows = "" ? 12 : status_rows
 status_font := IniRead("settings.ini", "settings", "status_font", "Arial")
 status_font := status_font = "" ? "Arial" : status_font
-status_size := IniRead("settings.ini", "settings", "status_size", 12)
-status_size := status_size = "" ? 12 : status_size
+status_size := IniRead("settings.ini", "settings", "status_size", 9)
+status_size := status_size = "" ? 9 : status_size
 status_colour := IniRead("settings.ini", "settings", "status_colour", "0xE0E0E0")
 status_colour := status_colour = "" ? "0xE0E0E0" : status_colour
 
-gap_x := IniRead("settings.ini", "settings", "gap_x", 25)
-gap_x := gap_x = "" ? 25 : gap_x
-gap_y := IniRead("settings.ini", "settings", "gap_y", 25)
-gap_y := gap_y = "" ? 25 : gap_y
+gap_x := IniRead("settings.ini", "settings", "gap_x", 10)
+gap_x := gap_x = "" ? 10 : gap_x
+gap_y := IniRead("settings.ini", "settings", "gap_y", 15)
+gap_y := gap_y = "" ? 15 : gap_y
 screen_border_x := IniRead("settings.ini", "settings", "screen_border_x", 10)
 screen_border_x := screen_border_x = "" ? 10 : screen_border_x
 screen_border_y := IniRead("settings.ini", "settings", "screen_border_y", 10)
@@ -5588,6 +5588,7 @@ diffusion_time(*) {
             "inputs", Map(
               "weight", image_prompt_active_listview.GetText(A_Index, 2) > 3 ? 3 : image_prompt_active_listview.GetText(A_Index, 2) < -1 ? -1 : image_prompt_active_listview.GetText(A_Index, 2)
               ,"noise", image_prompt_active_listview.GetText(A_Index, 3)
+              ,"weight_type", "linear"
               ,"ipadapter", ["IPAdapter_loader", 0]
               ,"clip_vision", ["clip_vision_loader", 0]
               ,"image", ["image_prompt_image_loader_" actual_image_prompt_count, 0]
@@ -5602,6 +5603,7 @@ diffusion_time(*) {
               "inputs", Map(
                 "weight", thought["IPAdapter_apply_" actual_image_prompt_count]["inputs"]["weight"]
                 ,"noise", thought["IPAdapter_apply_" actual_image_prompt_count]["inputs"]["noise"]
+                ,"weight_type", thought["IPAdapter_apply_" actual_image_prompt_count]["inputs"]["weight_type"]
                 ,"ipadapter", thought["IPAdapter_apply_" actual_image_prompt_count]["inputs"]["ipadapter"]
                 ,"clip_vision", thought["IPAdapter_apply_" actual_image_prompt_count]["inputs"]["clip_vision"]
                 ,"image", thought["IPAdapter_apply_" actual_image_prompt_count]["inputs"]["image"]
@@ -6034,6 +6036,9 @@ preview_sidejob(picture_frame) {
       oh_no(what_went_wrong)
       return
     }
+  }
+  else {
+    return
   }
 
   if (server_image_files.Has("mask")) {
