@@ -5588,6 +5588,7 @@ diffusion_time(*) {
             "inputs", Map(
               "weight", image_prompt_active_listview.GetText(A_Index, 2) > 3 ? 3 : image_prompt_active_listview.GetText(A_Index, 2) < -1 ? -1 : image_prompt_active_listview.GetText(A_Index, 2)
               ,"noise", image_prompt_active_listview.GetText(A_Index, 3)
+              ,"weight_type", "linear"
               ,"ipadapter", ["IPAdapter_loader", 0]
               ,"clip_vision", ["clip_vision_loader", 0]
               ,"image", ["image_prompt_image_loader_" actual_image_prompt_count, 0]
@@ -5602,6 +5603,7 @@ diffusion_time(*) {
               "inputs", Map(
                 "weight", thought["IPAdapter_apply_" actual_image_prompt_count]["inputs"]["weight"]
                 ,"noise", thought["IPAdapter_apply_" actual_image_prompt_count]["inputs"]["noise"]
+                ,"weight_type", thought["IPAdapter_apply_" actual_image_prompt_count]["inputs"]["weight_type"]
                 ,"ipadapter", thought["IPAdapter_apply_" actual_image_prompt_count]["inputs"]["ipadapter"]
                 ,"clip_vision", thought["IPAdapter_apply_" actual_image_prompt_count]["inputs"]["clip_vision"]
                 ,"image", thought["IPAdapter_apply_" actual_image_prompt_count]["inputs"]["image"]
