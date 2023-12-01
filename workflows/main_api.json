@@ -84,7 +84,7 @@
   "source_image_loader": {
     "inputs": {
       "image": "example.png",
-      "choose file to upload": "image"
+      "upload": "image"
     },
     "class_type": "LoadImage"
   },
@@ -104,7 +104,7 @@
   "mask_image_loader": {
     "inputs": {
       "image": "example.png",
-      "choose file to upload": "image"
+      "upload": "image"
     },
     "class_type": "LoadImage"
   },
@@ -374,7 +374,7 @@
   "controlnet_image_loader_1": {
     "inputs": {
       "image": "example.png",
-      "choose file to upload": "image"
+      "upload": "image"
     },
     "class_type": "LoadImage"
   },
@@ -423,7 +423,7 @@
   "image_prompt_image_loader_1": {
     "inputs": {
       "image": "example.png",
-      "choose file to upload": "image"
+      "upload": "image"
     },
     "class_type": "LoadImage"
   },
@@ -484,6 +484,10 @@
     "inputs": {
       "weight": 1,
       "noise": 0,
+      "weight_type": "linear",
+      "start_at": 0,
+      "end_at": 1,
+      "unfold_batch": false,
       "ipadapter": [
         "IPAdapter_loader",
         0
