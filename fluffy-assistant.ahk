@@ -5589,6 +5589,9 @@ diffusion_time(*) {
               "weight", image_prompt_active_listview.GetText(A_Index, 2) > 3 ? 3 : image_prompt_active_listview.GetText(A_Index, 2) < -1 ? -1 : image_prompt_active_listview.GetText(A_Index, 2)
               ,"noise", image_prompt_active_listview.GetText(A_Index, 3)
               ,"weight_type", "linear"
+              ,"start_at", 0
+              ,"end_at", 1
+              ,"unfold_batch", "false"
               ,"ipadapter", ["IPAdapter_loader", 0]
               ,"clip_vision", ["clip_vision_loader", 0]
               ,"image", ["image_prompt_image_loader_" actual_image_prompt_count, 0]
@@ -5604,6 +5607,9 @@ diffusion_time(*) {
                 "weight", thought["IPAdapter_apply_" actual_image_prompt_count]["inputs"]["weight"]
                 ,"noise", thought["IPAdapter_apply_" actual_image_prompt_count]["inputs"]["noise"]
                 ,"weight_type", thought["IPAdapter_apply_" actual_image_prompt_count]["inputs"]["weight_type"]
+                ,"start_at", thought["IPAdapter_apply_" actual_image_prompt_count]["inputs"]["start_at"]
+                ,"end_at", thought["IPAdapter_apply_" actual_image_prompt_count]["inputs"]["end_at"]
+                ,"unfold_batch", thought["IPAdapter_apply_" actual_image_prompt_count]["inputs"]["unfold_batch"]
                 ,"ipadapter", thought["IPAdapter_apply_" actual_image_prompt_count]["inputs"]["ipadapter"]
                 ,"clip_vision", thought["IPAdapter_apply_" actual_image_prompt_count]["inputs"]["clip_vision"]
                 ,"image", thought["IPAdapter_apply_" actual_image_prompt_count]["inputs"]["image"]
