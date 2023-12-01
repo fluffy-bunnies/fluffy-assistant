@@ -6083,12 +6083,13 @@ preview_sidejob(picture_frame) {
 upload_images(files, subfolder := "fluffy-assistant") {
   server_image_files := Map()
   for (picture, image_file in files) {
+    SplitPath image_file, &file_name_without_path
     altar.Open("POST", "http://" server_address "/upload/image", false)
 
     memory_handle := DllCall("GlobalAlloc", "UInt", 0x0002, "UPtr", 0, "Ptr")
     DllCall("ole32\CreateStreamOnHGlobal", "Ptr", memory_handle, "Int", False, "Ptr*", &ppstm_string := 0, "UInt")
 
-    image_content := "--@__________@`r`nContent-Disposition: form-data; name=`"image`"; filename=`"" image_file "`"`r`nContent-Type: application/octet-stream`r`n`r`n"
+    image_content := "--@__________@`r`nContent-Disposition: form-data; name=`"image`"; filename=`"" file_name_without_path "`"`r`nContent-Type: application/octet-stream`r`n`r`n"
     buffer_object := Buffer(StrPut(image_content, "utf-8") - 1)
     StrPut(image_content, buffer_object, buffer_object.Size, "utf-8")
     DllCall("shlwapi\IStream_Write", "Ptr", ppstm_string, "Ptr", buffer_object.Ptr, "UInt", buffer_object.Size, "UInt")
