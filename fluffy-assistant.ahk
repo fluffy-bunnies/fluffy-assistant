@@ -3030,27 +3030,34 @@ horde_lora_selection.SetFont("s" text_size " c" text_colour " q0", text_font)
 
 ;horde lora name
 ;--------------------------------------------------
-horde_lora_available_combobox := horde_lora_selection.Add("ComboBox", "x0 y0 w" A_ScreenWidth / 5 - 1 " Background" control_colour " Choose1", ["None"])
+horde_lora_available_combobox := horde_lora_selection.Add("ComboBox", "x0 y0 w" A_ScreenWidth / 5 - 102 " Background" control_colour " Choose1", ["None"])
+
+;horde lora ID type
+;--------------------------------------------------
+horde_lora_available_combobox.GetPos(&stored_gui_x, &stored_gui_y, &stored_gui_w, &stored_gui_h)
+horde_lora_id_type_dropdownlist := horde_lora_selection.Add("DropDownList", "x" stored_gui_x + stored_gui_w + 1 " y" stored_gui_y " w100 Background" control_colour " Choose1", ["Model", "Version"])
 
 ;horde lora strength
-horde_lora_available_combobox.GetPos(&stored_gui_x, &stored_gui_y, &stored_gui_w, &stored_gui_h)
-horde_lora_strength_edit := horde_lora_selection.Add("Edit", "x" stored_gui_x + stored_gui_w + 1 " y" stored_gui_y " w" 100 " r1 Background" control_colour " Center Limit6", horde_lora_strength_values["default"])
+;--------------------------------------------------
+horde_lora_id_type_dropdownlist.GetPos(&stored_gui_x, &stored_gui_y, &stored_gui_w, &stored_gui_h)
+horde_lora_strength_edit := horde_lora_selection.Add("Edit", "x" stored_gui_x + stored_gui_w + 1 " y" stored_gui_y " w100 r1 Background" control_colour " Center Limit6", horde_lora_strength_values["default"])
 horde_lora_strength_updown := horde_lora_selection.Add("UpDown", "Range0-1 0x80 -2", 0)
 
 ;horde active loras
 ;--------------------------------------------------
 horde_lora_available_combobox.GetPos(&stored_gui_x, &stored_gui_y, &stored_gui_w, &stored_gui_h)
-horde_lora_active_listview := horde_lora_selection.Add("ListView", "x" stored_gui_x " y" stored_gui_y + stored_gui_h + 1 " w" A_ScreenWidth / 5 + 100 " r5 Background" control_colour " -Multi", ["LORA", "Strength"])
+horde_lora_active_listview := horde_lora_selection.Add("ListView", "x" stored_gui_x " y" stored_gui_y + stored_gui_h + 1 " w" A_ScreenWidth / 5 + 100 " r5 Background" control_colour " -Multi", ["LORA", "ID Type", "Strength"])
 
 horde_lora_active_listview.GetPos(&stored_gui_x, &stored_gui_y, &stored_gui_w, &stored_gui_h)
 Loop 6 {
   horde_lora_active_listview.Add(,"")
 }
-horde_lora_active_listview.ModifyCol(1, stored_gui_w - 100)
-horde_lora_active_listview.ModifyCol(2, "AutoHdr Float")
-horde_lora_active_listview.InsertCol(3, 0, "Inject Trigger")
+horde_lora_active_listview.ModifyCol(1, stored_gui_w - 202)
+horde_lora_active_listview.ModifyCol(2, 101)
+horde_lora_active_listview.ModifyCol(3, "Float AutoHdr")
+horde_lora_active_listview.InsertCol(4, 0, "Inject Trigger")
 horde_lora_active_listview.Delete
-horde_lora_active_listview.Add(,"None", horde_lora_strength_values["default"])
+horde_lora_active_listview.Add(,"None", "Model", horde_lora_strength_values["default"])
 
 ;horde lora add/remove buttons
 ;--------------------------------------------------
@@ -3090,6 +3097,7 @@ horde_textual_inversion_available_combobox.GetPos(&stored_gui_x, &stored_gui_y, 
 horde_textual_inversion_inject_field_dropdownlist := horde_textual_inversion_selection.Add("DropDownList", "x" stored_gui_x + stored_gui_w + 1 " y" stored_gui_y " w100 Background" control_colour " Choose1", ["Positive", "Negative", "Manual"])
 
 ;horde ti strength
+;--------------------------------------------------
 horde_textual_inversion_inject_field_dropdownlist.GetPos(&stored_gui_x, &stored_gui_y, &stored_gui_w, &stored_gui_h)
 horde_textual_inversion_strength_edit := horde_textual_inversion_selection.Add("Edit", "x" stored_gui_x + stored_gui_w + 1 " y" stored_gui_y " w100 r1 Background" control_colour " Center Limit6", horde_textual_inversion_strength_values["default"])
 horde_textual_inversion_strength_updown := horde_textual_inversion_selection.Add("UpDown", "Range0-1 0x80 -2", 0)
@@ -3575,6 +3583,16 @@ horde_lora_available_combobox_change(GuiCtrlObj, Info) {
   }
 }
 
+;horde lora ID type
+;--------------------------------------------------
+horde_lora_id_type_dropdownlist.OnEvent("Change", horde_lora_id_type_dropdownlist_change)
+horde_lora_id_type_dropdownlist_change(GuiCtrlObj, Info) {
+  horde_lora_current := horde_lora_active_listview.GetCount() = 1 ? 1 : horde_lora_active_listview.GetNext()
+  if (horde_lora_current) {
+    horde_lora_active_listview.Modify(horde_lora_current, "Vis",, GuiCtrlObj.Text)
+  }
+}
+
 ;horde lora strength
 ;--------------------------------------------------
 horde_lora_strength_updown.OnEvent("Change", horde_lora_strength_updown_change)
@@ -3582,7 +3600,7 @@ horde_lora_strength_updown_change(GuiCtrlObj, Info) {
   number_update(horde_lora_strength_values["default"], horde_lora_strength_values["minimum"], horde_lora_strength_values["maximum"], horde_lora_strength_values["multipleOf"], horde_lora_strength_values["dp"], horde_lora_strength_edit, Info)
   horde_lora_current := horde_lora_active_listview.GetCount() = 1 ? 1 : horde_lora_active_listview.GetNext()
   if (horde_lora_current) {
-    horde_lora_active_listview.Modify(horde_lora_current, "Vis",, horde_lora_strength_edit.Value)
+    horde_lora_active_listview.Modify(horde_lora_current, "Vis",,, horde_lora_strength_edit.Value)
   }
 }
 
@@ -3591,7 +3609,7 @@ horde_lora_strength_edit_losefocus(GuiCtrlObj, Info) {
   horde_lora_current := horde_lora_active_listview.GetCount() = 1 ? 1 : horde_lora_active_listview.GetNext()
   if (horde_lora_current) {
     number_cleanup(horde_lora_active_listview.GetText(horde_lora_current, 2), horde_lora_strength_values["minimum"], horde_lora_strength_values["maximum"], GuiCtrlObj)
-    horde_lora_active_listview.Modify(horde_lora_current,,, GuiCtrlObj.Value)
+    horde_lora_active_listview.Modify(horde_lora_current,,,, GuiCtrlObj.Value)
   }
   else {
     number_cleanup(horde_lora_strength_values["default"], horde_lora_strength_values["minimum"], horde_lora_strength_values["maximum"], GuiCtrlObj)
@@ -3605,11 +3623,13 @@ horde_lora_active_listview_itemselect(GuiCtrlObj, Item, Selected) {
   horde_lora_current := GuiCtrlObj.GetCount() = 1 ? 1 : GuiCtrlObj.GetNext()
   if (horde_lora_current) {
     horde_lora_available_combobox.Text := GuiCtrlObj.GetText(horde_lora_current,1)
-    horde_lora_strength_edit.Value := GuiCtrlObj.GetText(horde_lora_current,2)
-    horde_lora_inject_trigger_edit.Value := GuiCtrlObj.GetText(horde_lora_current,3)
+    horde_lora_id_type_dropdownlist.Text := GuiCtrlObj.GetText(horde_lora_current,2)
+    horde_lora_strength_edit.Value := GuiCtrlObj.GetText(horde_lora_current,3)
+    horde_lora_inject_trigger_edit.Value := GuiCtrlObj.GetText(horde_lora_current,4)
   }
   else {
     horde_lora_available_combobox.Text := "None"
+    horde_lora_id_type_dropdownlist.Value := 1
     horde_lora_strength_edit.Value := horde_lora_strength_values["default"]
     horde_lora_inject_trigger_edit.Value := ""
   }
@@ -3622,13 +3642,13 @@ horde_lora_active_listview.OnEvent("DoubleClick", horde_lora_remove_button_click
 horde_lora_add_button.OnEvent("Click", horde_lora_add_button_click)
 horde_lora_add_button_click(GuiCtrlObj, Info) {
   if (horde_lora_active_listview.GetNext() or horde_lora_active_listview.GetCount() <= 1) {
-    horde_lora_active_listview.Add("Select", "None", horde_lora_strength_values["default"], "")
+    horde_lora_active_listview.Add("Select", "None", "Model", horde_lora_strength_values["default"], "")
     horde_lora_active_listview.Modify(horde_lora_active_listview.GetCount(), "Vis")
     horde_lora_active_listview_itemselect(horde_lora_active_listview, "", "")
     horde_lora_available_combobox.Focus()
   }
   else {
-    horde_lora_active_listview.Add("Select", horde_lora_available_combobox.Text, horde_lora_strength_edit.Value, horde_lora_inject_trigger_edit.Value)
+    horde_lora_active_listview.Add("Select", horde_lora_available_combobox.Text, horde_lora_id_type_dropdownlist.Text, horde_lora_strength_edit.Value, horde_lora_inject_trigger_edit.Value)
     horde_lora_active_listview.Modify(horde_lora_active_listview.GetCount(), "Vis")
     ;horde_lora_active_listview_itemselect(horde_lora_active_listview, "", "")
   }
@@ -3640,10 +3660,11 @@ horde_lora_remove_button.OnEvent("Click", horde_lora_remove_button_click)
 horde_lora_remove_button_click(GuiCtrlObj, Info) {
   if (horde_lora_active_listview.GetCount() <= 1) {
     horde_lora_available_combobox.Text := "None"
+    horde_lora_id_type_dropdownlist.Text := "Model"
     horde_lora_strength_edit.Value := horde_lora_strength_values["default"]
     horde_lora_inject_trigger_edit.Value := ""
     horde_lora_active_listview.Delete()
-    horde_lora_active_listview.Add(, "None", horde_lora_strength_values["default"])
+    horde_lora_active_listview.Add(, "None", "Model", horde_lora_strength_values["default"])
   }
   else {
     horde_lora_to_remove := horde_lora_active_listview.GetNext()
@@ -3666,7 +3687,7 @@ horde_lora_inject_trigger_edit.OnEvent("Change", horde_lora_inject_trigger_edit_
 horde_lora_inject_trigger_edit_change(GuiCtrlObj, Info) {
   horde_lora_current := horde_lora_active_listview.GetCount() = 1 ? 1 : horde_lora_active_listview.GetNext()
   if (horde_lora_current) {
-    horde_lora_active_listview.Modify(horde_lora_current, "Vis",,, GuiCtrlObj.Value)
+    horde_lora_active_listview.Modify(horde_lora_current, "Vis",,,, GuiCtrlObj.Value)
   }
 }
 
@@ -6502,12 +6523,13 @@ summon_the_horde(*) {
         actual_lora_array.Push(
           Map(
             "name", lora_name
-            ,"model", horde_lora_active_listview.GetText(A_Index, 2) + 0
-            ,"clip", horde_lora_active_listview.GetText(A_Index, 2) + 0
+            ,"is_version", horde_lora_active_listview.GetText(A_Index, 2) = "Version" ? "true" : "false"
+            ,"model", horde_lora_active_listview.GetText(A_Index, 3) + 0
+            ,"clip", horde_lora_active_listview.GetText(A_Index, 3) + 0
           )
         )
-        if (horde_lora_active_listview.GetText(A_Index, 3)) {
-          actual_lora_array[-1]["inject_trigger"] := horde_lora_active_listview.GetText(A_Index, 3)
+        if (horde_lora_active_listview.GetText(A_Index, 4)) {
+          actual_lora_array[-1]["inject_trigger"] := horde_lora_active_listview.GetText(A_Index, 4)
         }
       }
     }
@@ -6783,8 +6805,9 @@ save_state(workspace_folder, slot_id) {
       while (A_Index <= horde_lora_active_listview.GetCount()) {
         string_of_pairs .= (
         "`nhorde_lora_" A_Index "_name=" horde_lora_active_listview.GetText(A_Index, 1)
-        "`nhorde_lora_" A_Index "_strength=" horde_lora_active_listview.GetText(A_Index, 2)
-        "`nhorde_lora_" A_Index "_inject_trigger=" horde_lora_active_listview.GetText(A_Index, 3)
+        "`nhorde_lora_" A_Index "_id_type=" horde_lora_active_listview.GetText(A_Index, 2)
+        "`nhorde_lora_" A_Index "_strength=" horde_lora_active_listview.GetText(A_Index, 3)
+        "`nhorde_lora_" A_Index "_inject_trigger=" horde_lora_active_listview.GetText(A_Index, 4)
         )
       }
 
@@ -7002,7 +7025,7 @@ load_state(workspace_folder, slot_id) {
       if (IniRead(workspace_folder slot_id ".ini", "save", "horde_lora_1_name", "option_not_found") != "option_not_found") {
         horde_lora_active_listview.Delete()
         while ((horde_lora_name := IniRead(workspace_folder slot_id ".ini", "save", "horde_lora_" A_Index "_name", "option_not_found")) != "option_not_found") {
-          horde_lora_active_listview.Add(, horde_lora_name, IniRead(workspace_folder slot_id ".ini", "save", "horde_lora_" A_Index "_strength", ""), IniRead(workspace_folder slot_id ".ini", "save", "horde_lora_" A_Index "_inject_trigger"))
+          horde_lora_active_listview.Add(, horde_lora_name, IniRead(workspace_folder slot_id ".ini", "save", "horde_lora_" A_Index "_id_type", ""), IniRead(workspace_folder slot_id ".ini", "save", "horde_lora_" A_Index "_strength", ""), IniRead(workspace_folder slot_id ".ini", "save", "horde_lora_" A_Index "_inject_trigger"))
         }
         horde_lora_active_listview.Modify(1 ,"Select Vis")
         horde_lora_active_listview_itemselect(horde_lora_active_listview, "", "")
