@@ -6658,9 +6658,23 @@ horde_download_image(prompt_id) {
       horde_output_listview.Opt("-Redraw")
       for (output_image in history["generations"]) {
         destination_file_name := prompt_id "_" Format("{:05u}", A_Index) "_.webp"
+        abbreviated_name := "[" SubStr(prompt_id, 1, 8) "] " Format("{:05u}", A_Index)
         Download output_image["img"], horde_output_folder destination_file_name
-        horde_output_listview.Insert(1,, destination_file_name, "[" SubStr(prompt_id, 1, 8) "] " Format("{:05u}", A_Index))
-        IniWrite("ID: " output_image["id"] ", Seed: " output_image["seed"] ", Worker: " output_image["worker_name"] " (" output_image["worker_id"] ")", horde_output_folder "history.ini", prompt_id, destination_file_name)
+
+        ;gen_metadata
+        gen_metadata_to_history := ""
+        if (output_image.Has("gen_metadata") and output_image["gen_metadata"].Length) {
+          gen_metadata_to_status := ""
+          for (gen_metadata_details in output_image["gen_metadata"]) {
+            gen_metadata_message := "[" gen_metadata_details["type"] ": " gen_metadata_details["value"] (gen_metadata_details.Has("ref") ? " (" gen_metadata_details["ref"] ")" : "") "]"
+            gen_metadata_to_history .= " " gen_metadata_message
+            gen_metadata_to_status .= "`n" gen_metadata_message
+          }
+          status_text.Text := FormatTime() "`nOne or more issues occurred for " abbreviated_name ":" gen_metadata_to_status
+        }
+
+        horde_output_listview.Insert(1,, destination_file_name, (gen_metadata_to_history != "" ? "[!] " : "") abbreviated_name)
+        IniWrite("ID: " output_image["id"] ", Seed: " output_image["seed"] ", Worker: " output_image["worker_name"] " (" output_image["worker_id"] ")" gen_metadata_to_history, horde_output_folder "history.ini", prompt_id, destination_file_name)
       }
       horde_output_listview.Opt("+Redraw")
       if (horde_output_listview.GetCount()) {
