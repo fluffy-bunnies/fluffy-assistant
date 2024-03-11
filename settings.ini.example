@@ -59,6 +59,7 @@ horde_api_key=664a30ec-0760-4f29-b634-00d2bee11f77
 horde_use_specific_worker=
 horde_allow_nsfw=0
 horde_replacement_filter=1
+horde_allow_downgrade=1
 horde_allow_untrusted_workers=1
 horde_allow_slow_workers=1
 horde_share_with_laion=1
