@@ -6609,6 +6609,16 @@ summon_the_horde(*) {
     message_to_display := FormatTime() "`nhttps://" horde_address "/api/v2/generate/async`n" altar.Status ": " altar.StatusText
     if (altar.Status = 202) {
       message_to_display .= "`n" horde_vision["id"]
+
+      ;warnings
+      if (horde_vision.Has("warnings") and horde_vision["warnings"].Length) {
+        gen_warnings := ""
+        for (warning_details in horde_vision["warnings"]) {
+          gen_warnings .= "[Warning] " (warning_details.Has("code") ? warning_details["code"] ": " : "") (warning_details.Has("message") ? warning_details["message"] : "") "`n"
+        }
+        message_to_display .= (gen_warnings ? "`n" gen_warnings : "")
+      }
+
       try {
         DetectHiddenWindows True
         if (!WinExist(horde_assistant_script " ahk_class AutoHotkey")) {
