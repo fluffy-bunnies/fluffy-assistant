@@ -92,6 +92,8 @@ horde_allow_nsfw := IniRead("settings.ini", "settings", "horde_allow_nsfw", 0)
 ;blank means no
 horde_replacement_filter := IniRead("settings.ini", "settings", "horde_replacement_filter", 1)
 ;blank means no, but leave on if unspecified
+horde_allow_downgrade := IniRead("settings.ini", "settings", "horde_allow_downgrade", 1)
+;blank means no, but leave on if unspecified
 horde_allow_untrusted_workers := IniRead("settings.ini", "settings", "horde_allow_untrusted_workers", 1)
 ;blank means no, but leave on if unspecified
 horde_allow_slow_workers := IniRead("settings.ini", "settings", "horde_allow_slow_workers", 1)
@@ -677,6 +679,7 @@ horde_use_specific_worker_button := settings_window.Add("Button", "yp w100", "Ap
 
 horde_allow_nsfw_checkbox := settings_window.Add("Checkbox", "xs Checked" (horde_allow_nsfw ? 1 : 0), "NSFW")
 horde_replacement_filter_checkbox := settings_window.Add("Checkbox", "xs Checked" (horde_replacement_filter ? 1 : 0), "Replacement Filter")
+horde_allow_downgrade_checkbox := settings_window.Add("Checkbox", "xs Checked" (horde_allow_downgrade ? 1 : 0), "Downgrade if Upfront Kudos Requirement Not Met")
 horde_allow_untrusted_workers_checkbox := settings_window.Add("Checkbox", "xs Checked" (horde_allow_untrusted_workers ? 1 : 0), "Allow Untrusted Workers")
 horde_allow_slow_workers_checkbox := settings_window.Add("Checkbox", "xs Checked" (horde_allow_slow_workers ? 1 : 0), "Allow Slow Workers")
 horde_share_with_laion_checkbox := settings_window.Add("Checkbox", "xs Checked" (horde_share_with_laion ? 1 : 0), "Share with LAION to Improve AI")
@@ -2741,6 +2744,7 @@ save_settings_button_click(GuiCtrlObj, Info) {
     IniWrite(horde_use_specific_worker_edit.Text, "settings.ini", "settings", "horde_use_specific_worker")
     IniWrite(horde_allow_nsfw_checkbox.Value, "settings.ini", "settings", "horde_allow_nsfw")
     IniWrite(horde_replacement_filter_checkbox.Value, "settings.ini", "settings", "horde_replacement_filter")
+    IniWrite(horde_allow_downgrade_checkbox.Value, "settings.ini", "settings", "horde_allow_downgrade")
     IniWrite(horde_allow_untrusted_workers_checkbox.Value, "settings.ini", "settings", "horde_allow_untrusted_workers")
     IniWrite(horde_allow_slow_workers_checkbox.Value, "settings.ini", "settings", "horde_allow_slow_workers")
     IniWrite(horde_share_with_laion_checkbox.Value, "settings.ini", "settings", "horde_share_with_laion")
@@ -6590,6 +6594,7 @@ summon_the_horde(*) {
     horde_thought["r2"] := "true"
     horde_thought["shared"] := horde_share_with_laion_checkbox.Value ? "true" : "false"
     horde_thought["replacement_filter"] := horde_replacement_filter_checkbox.Value ? "true" : "false"
+    horde_thought["allow_downgrade"] := horde_allow_downgrade_checkbox.Value ? "true" : "false"
     horde_thought["dry_run"] := "false"
 
     horde_prayer := Jxon_dump(horde_thought)
